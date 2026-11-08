@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" fill="none" stroke="#ffffff" stroke-width="4">
+  <circle cx="150" cy="95" r="45"/>
+  <path d="M60 400 V250 C60 190 100 160 150 160 C200 160 240 190 240 250 V400"/>
+  <line x1="150" y1="0" x2="150" y2="400" stroke-dasharray="10 10" stroke-width="2"/>
+  <text x="150" y="370" fill="#ffffff" stroke="none" font-family="sans-serif" font-size="28" text-anchor="middle">GHOST</text>
+</svg>

@@ -1,0 +1,132 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d0d0c;
+  --surface: #171716;
+  --surface-2: #212120;
+  --border: #262624;
+  --border-input: #2e2e2c;
+  --text: #f2f1ec;
+  --text-2: #a3a29c;
+  --label: #8a8984;
+  --accent: #ff7a1a;
+  --on-accent: #0d0d0c;
+  --error-text: #ffb37a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 16px 16px 40px;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.4 system-ui, -apple-system, sans-serif;
+}
+
+h1 {
+  margin: 4px 0;
+  font-size: 24px;
+}
+
+h2 {
+  margin: 0 0 8px;
+  color: var(--label);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+p {
+  margin: 0 0 8px;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+section {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+input[type="text"] {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border-input);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+}
+
+button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+button.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+pre {
+  margin: 8px 0 0;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--bg);
+  font: 13px/1.45 ui-monospace, Menlo, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ok {
+  color: var(--accent);
+}
+
+.warn {
+  color: var(--error-text);
+}
+
+.viewer {
+  position: relative;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #000;
+  aspect-ratio: 3 / 4;
+}
+
+.viewer video,
+.viewer img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.viewer img {
+  opacity: 0.35;
+  pointer-events: none;
+}
