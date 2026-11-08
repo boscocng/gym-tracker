@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Log, nothing logged yet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#0D0D0C}
+a{color:#F2F1EC}a:hover{color:#FFFFFF}
+input::placeholder{color:#8A8984}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #0D0D0C; color: #F2F1EC; font-family: 'Barlow', system-ui, sans-serif; overflow: hidden">
+
+<header style="flex: none; padding: 52px 16px 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Sunday · Nov 1</span>
+<h1 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 40px; line-height: 1">Log</h1>
+</div>
+<span style="padding-bottom: 4px; font-size: 14px; color: #A3A29C">0 sets</span>
+</header>
+
+<main style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; padding: 0 40px; text-align: center">
+<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#4A4A46" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"></path></svg>
+<p style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1">No sets yet</p>
+<p style="margin: 0; font-size: 15px; line-height: 1.5; color: #A3A29C">Tap the box below and say a set, like “bench 185 for 6”. The set number fills in by itself.</p>
+</main>
+
+<div style="flex: none; padding: 0 16px 12px">
+<a href="RestDay.dc.html" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; box-sizing: border-box; padding: 10px 14px 10px 16px; border-radius: 14px; background: #171716; border: 1px solid #262624; color: #F2F1EC; text-decoration: none">
+<span style="display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 16px; font-weight: 600">Not training today</span>
+<span style="font-size: 13px; color: #FF7A1A">Rest unlocked · 6 of last 7 trained</span>
+</span>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8984" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+</a>
+</div>
+
+<div style="flex: none; padding: 10px 16px 12px; border-top: 1px solid #1F1F1E">
+<form style="display: flex; gap: 8px; align-items: center; margin: 0">
+<input type="text" aria-label="Log a set by voice or typing" placeholder="Say a set: bench 185 for 6" style="flex: 1; min-width: 0; height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: 14px; border: 1px solid #2E2E2C; background: #171716; color: #F2F1EC; font-family: 'Barlow', sans-serif; font-weight: 500; font-size: 16px">
+<button type="button" aria-label="Add set" style="flex: none; width: 52px; height: 52px; border-radius: 14px; border: 0; background: #FF7A1A; color: #0D0D0C; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"></path></svg>
+</button>
+</form>
+</div>
+
+<dc-import name="TabBar" active="log" hint-size="390px,84px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

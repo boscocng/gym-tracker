@@ -1,0 +1,29 @@
+# Dependencies and builds
+node_modules/
+.next/
+out/
+build/
+coverage/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+esp32/secrets.yaml
+esp32/.esphome/
+
+# Supabase local state
+supabase/.temp/
+supabase/.branches/
+
+# Never commit personal data
+*.dump
+*.sql.gz
+exports/
+photos/
+
+# OS and editor
+.DS_Store
+*.log
+.vscode/
+.idea/

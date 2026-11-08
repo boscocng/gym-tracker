@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Edit add-on</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#0D0D0C}
+a{color:#F2F1EC}a:hover{color:#FFFFFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #0D0D0C; color: #F2F1EC; font-family: 'Barlow', system-ui, sans-serif; overflow: hidden">
+
+<header style="flex: none; padding: 52px 8px 0; display: flex; align-items: center">
+<a href="AddOns.dc.html" style="flex: none; width: 72px; display: flex; align-items: center; min-height: 44px; padding: 0 8px; box-sizing: border-box; font-size: 16px; color: #A3A29C; text-decoration: none">Cancel</a>
+<h1 style="flex: 1; margin: 0; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px">Edit add-on</h1>
+<span aria-hidden="true" style="flex: none; width: 72px"></span>
+</header>
+
+<main style="flex: 1; min-height: 0; box-sizing: border-box; padding: 28px 16px 0; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="addon-name" style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Name</label>
+<input id="addon-name" type="text" value="Preworkout" style="height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: 14px; border: 1px solid #2E2E2C; background: #171716; color: #F2F1EC; font-family: 'Barlow', sans-serif; font-size: 17px">
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="addon-details" style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Details</label>
+<input id="addon-details" type="text" value="1.5 scoops, 30 min before" style="height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: 14px; border: 1.5px solid #FF7A1A; background: #171716; color: #F2F1EC; font-family: 'Barlow', sans-serif; font-size: 17px">
+</div>
+
+<div role="note" style="display: flex; gap: 12px; padding: 14px; border-radius: 14px; background: #1F1610; border: 1px solid #4A2E18">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF7A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 11v5M12 7.5v.01"></path></svg>
+<p style="margin: 0; font-size: 15px; line-height: 1.45">Changing details starts a new period. <span style="color: #A3A29C">Oct 21 to Oct 31 stays in your history as “1 scoop, 30 min before”.</span></p>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="addon-start" style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">New period starts</label>
+<input id="addon-start" type="date" value="2026-11-01" style="height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: 14px; border: 1px solid #2E2E2C; background: #171716; color: #F2F1EC; color-scheme: dark; font-family: 'Barlow', sans-serif; font-size: 17px">
+<span style="font-size: 13px; color: #8A8984">Pick an earlier day if you started before today.</span>
+</div>
+</main>
+
+<div style="flex: none; padding: 16px 16px 40px; display: flex; flex-direction: column; gap: 10px">
+<a href="AddOns.dc.html" style="display: flex; align-items: center; justify-content: center; height: 56px; border-radius: 14px; background: #FF7A1A; color: #0D0D0C; text-decoration: none; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: 0.04em; text-transform: uppercase">Start new period</a>
+<a href="AddOns.dc.html" style="display: flex; align-items: center; justify-content: center; height: 56px; box-sizing: border-box; border-radius: 14px; background: transparent; border: 1px solid #3A3A37; color: #F2F1EC; text-decoration: none; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: 0.04em; text-transform: uppercase">Stop preworkout</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Log</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#0D0D0C}
+a{color:#F2F1EC}a:hover{color:#FFFFFF}
+input::placeholder{color:#8A8984}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #0D0D0C; color: #F2F1EC; font-family: 'Barlow', system-ui, sans-serif; overflow: hidden">
+
+<header style="flex: none; padding: 52px 16px 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Sunday · Nov 1</span>
+<h1 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 40px; line-height: 1">Log</h1>
+</div>
+<span style="padding-bottom: 4px; font-size: 14px; color: #A3A29C; font-variant-numeric: tabular-nums">{{ summary }}</span>
+</header>
+
+<main style="flex: 1; min-height: 0; overflow-y: auto; box-sizing: border-box; padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<section style="background: #171716; border: 1px solid #262624; border-radius: 16px; padding: 12px 14px 4px; display: flex; flex-direction: column">
+<h2 style="margin: 0 0 6px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 21px; line-height: 1.2">{{ g.name }}</h2>
+<sc-for list="{{ g.rows }}" as="row" hint-placeholder-count="2">
+<button type="button" aria-label="{{ row.label }}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 46px; padding: 0; background: transparent; border: 0; border-top: 1px solid #232321; color: #F2F1EC; font: inherit; text-align: left; cursor: pointer">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 15px; color: #A3A29C">Set {{ row.n }}<sc-if value="{{ row.latest }}" hint-placeholder-val="{{ false }}"><span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #0D0D0C; background: #FF7A1A; border-radius: 999px; padding: 3px 8px">Just now</span></sc-if></span>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 21px; font-variant-numeric: tabular-nums">{{ row.weight }}<span style="font-size: 14px; color: #A3A29C; margin: 0 6px 0 2px">lb</span>× {{ row.reps }}</span>
+</button>
+</sc-for>
+</section>
+</sc-for>
+<p style="margin: 2px 0 0; font-size: 13px; color: #8A8984; text-align: center">Tap a set to edit · swipe left to delete</p>
+</main>
+
+<div style="flex: none; padding: 10px 16px 12px; border-top: 1px solid #1F1F1E; display: flex; flex-direction: column; gap: 8px">
+<sc-if value="{{ hasLast }}" hint-placeholder-val="{{ true }}">
+<div role="status" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 4px 4px 12px; border-radius: 12px; background: #171716; border: 1px solid #262624">
+<span style="display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF7A1A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>
+<span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ lastText }}</span>
+</span>
+<button type="button" onClick="{{ undo }}" style="flex: none; display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border-radius: 9px; border: 0; background: #262624; color: #F2F1EC; font-family: 'Barlow', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6 4 11l5 5"></path><path d="M4 11h11a5 5 0 0 1 0 10h-3"></path></svg>
+Undo
+</button>
+</div>
+</sc-if>
+<sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+<p role="alert" style="margin: 0; font-size: 14px; color: #FFB37A">{{ error }}</p>
+</sc-if>
+<form onSubmit="{{ submit }}" style="display: flex; gap: 8px; align-items: center; margin: 0">
+<input type="text" value="{{ draft }}" onChange="{{ onDraft }}" aria-label="Log a set by voice or typing" placeholder="Say a set: bench 185 for 6" style="flex: 1; min-width: 0; height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: 14px; border: 1px solid #2E2E2C; background: #171716; color: #F2F1EC; font-family: 'Barlow', sans-serif; font-weight: 500; font-size: 16px">
+<button type="submit" aria-label="Add set" style="flex: none; width: 52px; height: 52px; border-radius: 14px; border: 0; background: #FF7A1A; color: #0D0D0C; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"></path></svg>
+</button>
+</form>
+</div>
+
+<dc-import name="TabBar" active="log" hint-size="390px,84px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+seed() {
+return [
+{ id: 1, ex: 'Bench press', w: 185, r: 6 },
+{ id: 2, ex: 'Bench press', w: 185, r: 5 },
+{ id: 3, ex: 'Incline dumbbell press', w: 70, r: 8 },
+{ id: 4, ex: 'Incline dumbbell press', w: 70, r: 7 },
+{ id: 5, ex: 'Overhead press', w: 115, r: 7 }
+];
+}
+
+currentSets() {
+const st = this.state || {};
+return st.sets || this.seed();
+}
+
+currentLastId() {
+const st = this.state || {};
+return st.lastId !== undefined ? st.lastId : 5;
+}
+
+canonical(name) {
+if (!name) return null;
+const map = {
+'bench': 'Bench press', 'bench press': 'Bench press', 'benchpress': 'Bench press', 'flat bench': 'Bench press',
+'incline': 'Incline dumbbell press', 'incline db': 'Incline dumbbell press', 'incline dumbbell': 'Incline dumbbell press',
+'incline press': 'Incline dumbbell press', 'incline dumbbell press': 'Incline dumbbell press',
+'ohp': 'Overhead press', 'overhead': 'Overhead press', 'overhead press': 'Overhead press', 'shoulder press': 'Overhead press',
+'dip': 'Weighted dip', 'dips': 'Weighted dip', 'weighted dip': 'Weighted dip', 'weighted dips': 'Weighted dip',
+'lateral raise': 'Lateral raise', 'lateral raises': 'Lateral raise', 'laterals': 'Lateral raise', 'lat raise': 'Lateral raise',
+'pushdown': 'Triceps pushdown', 'pushdowns': 'Triceps pushdown', 'tricep pushdown': 'Triceps pushdown', 'triceps pushdown': 'Triceps pushdown'
+};
+if (map[name]) return map[name];
+return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+parse(raw) {
+let t = ' ' + String(raw || '').toLowerCase() + ' ';
+t = t.replace(/\bset\s*(?:number\s*)?\d+\b/g, ' ');
+t = t.replace(/\b(?:first|second|third|fourth|fifth|last|next|another)\s+set\b/g, ' ');
+let weight = null;
+let reps = null;
+const repsMatch = t.match(/(\d+)\s*(?:reps?|times)\b/);
+if (repsMatch) {
+reps = parseInt(repsMatch[1], 10);
+const rest = t.replace(repsMatch[0], ' ');
+const w = rest.match(/\d+(?:\.\d+)?/);
+weight = w ? parseFloat(w[0]) : null;
+} else {
+const nums = t.match(/\d+(?:\.\d+)?/g) || [];
+if (nums.length >= 2) {
+weight = parseFloat(nums[0]);
+reps = parseInt(nums[1], 10);
+}
+}
+if (weight === null || reps === null || isNaN(weight) || isNaN(reps)) return null;
+const name = t
+.replace(/\d+(?:\.\d+)?\s*(?:lbs?|pounds?|kgs?|reps?|times)?/g, ' ')
+.replace(/[^a-z\s]/g, ' ')
+.replace(/\b(?:x|for|at|by|with|of|and|set|sets|lb|lbs|kg|pounds)\b/g, ' ')
+.replace(/\s+/g, ' ')
+.trim();
+const ex = this.canonical(name);
+if (!ex) return null;
+return { ex: ex, w: weight, r: reps };
+}
+
+addFromText(text) {
+const parsed = this.parse(text);
+if (!parsed) {
+this.setState({ error: 'Couldn’t read that. Try “bench 185 for 6”.' });
+return;
+}
+const sets = this.currentSets();
+const id = sets.reduce((m, s) => Math.max(m, s.id), 0) + 1;
+this.setState({
+sets: sets.concat([{ id: id, ex: parsed.ex, w: parsed.w, r: parsed.r }]),
+lastId: id,
+draft: '',
+error: ''
+});
+}
+
+renderVals() {
+const st = this.state || {};
+const sets = this.currentSets();
+const lastId = this.currentLastId();
+const groups = [];
+const index = {};
+let lastText = '';
+sets.forEach((s) => {
+if (index[s.ex] === undefined) {
+index[s.ex] = groups.length;
+groups.push({ name: s.ex, rows: [] });
+}
+const g = groups[index[s.ex]];
+const n = g.rows.length + 1;
+g.rows.push({
+n: n,
+weight: s.w,
+reps: s.r,
+latest: s.id === lastId,
+label: 'Set ' + n + ', ' + s.w + ' lb for ' + s.r + ' reps. Tap to edit.'
+});
+if (s.id === lastId) {
+lastText = s.ex + ' · set ' + n + ' · ' + s.w + ' lb × ' + s.r;
+}
+});
+const exCount = groups.length;
+return {
+groups: groups,
+summary: sets.length + (sets.length === 1 ? ' set' : ' sets') + ' · ' + exCount + (exCount === 1 ? ' exercise' : ' exercises'),
+hasLast: lastText !== '',
+lastText: lastText,
+draft: st.draft || '',
+error: st.error || '',
+hasError: !!st.error,
+onDraft: (e) => this.setState({ draft: e.target.value, error: '' }),
+submit: (e) => {
+e.preventDefault();
+this.addFromText((this.state && this.state.draft) || '');
+},
+undo: () => {
+const lid = this.currentLastId();
+this.setState({ sets: this.currentSets().filter((s) => s.id !== lid), lastId: null });
+}
+};
+}
+}
+</script>
+</body>
+</html>

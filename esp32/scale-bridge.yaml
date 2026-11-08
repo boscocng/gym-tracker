@@ -1,0 +1,83 @@
+# Scale bridge: Xiaomi Smart Scale S200 -> ESP32 -> the app's /api/scale endpoint.
+#
+# Uses only official ESPHome components, no custom code:
+#   xiaomi_body_scale  https://esphome.io/components/sensor/xiaomi_body_scale/  (ESPHome 2026.10.0+)
+#   esp32_ble_tracker  https://esphome.io/components/esp32_ble_tracker/
+#   http_request       https://esphome.io/components/http_request/
+#
+# Before flashing, copy secrets.example.yaml to secrets.yaml and fill it in.
+# Setup steps and troubleshooting are in README.md.
+
+esphome:
+  name: scale-bridge
+  min_version: 2026.10.0
+
+esp32:
+  board: esp32dev # ESP32-WROOM-32 / DevKitC boards
+  framework:
+    type: esp-idf # the framework the xiaomi_body_scale component was tested on
+
+logger:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+# Lets you read logs and update the board over Wi-Fi.
+# reboot_timeout: 0s is required here. There's no Home Assistant connecting to the
+# API, and by default ESPHome reboots the board every 15 minutes when nothing does.
+api:
+  reboot_timeout: 0s
+  encryption:
+    key: !secret api_encryption_key
+
+# Wireless updates, encrypted with the same key as the API above.
+# ESPHome recommends this over an OTA password, which costs extra flash and RAM.
+ota:
+  - platform: esphome
+    encryption:
+
+esp32_ble_tracker:
+  id: ble_tracker
+
+http_request:
+  timeout: 10s # leaves room for a cold start on Vercel
+  verify_ssl: true # uses ESPHome's built-in root certificate bundle
+
+sensor:
+  - platform: xiaomi_body_scale
+    mac_address: !secret scale_mac
+    bindkey: !secret scale_bindkey
+    profile_id:
+      name: "Scale Profile"
+      id: scale_profile
+    weight:
+      name: "Scale Weight"
+      id: scale_weight
+      on_value:
+        then:
+          # Pause Bluetooth scanning while the HTTPS request runs, so Bluetooth and
+          # TLS aren't competing for RAM on the classic ESP32. It resumes either way.
+          - esp32_ble_tracker.stop_scan:
+          - http_request.post:
+              url: !secret ingest_url
+              request_headers:
+                Content-Type: application/json
+                X-Scale-Token: !secret ingest_token
+              json: |-
+                root["weight_kg"] = id(scale_weight).state;
+                if (id(scale_profile).has_state()) {
+                  root["profile_id"] = (int) id(scale_profile).state;
+                }
+              on_response:
+                then:
+                  - logger.log:
+                      format: "Posted %.2f kg, HTTP %d"
+                      args: ["id(scale_weight).state", "response->status_code"]
+                  - esp32_ble_tracker.start_scan:
+                      continuous: true
+              on_error:
+                then:
+                  - logger.log: "Post failed: Wi-Fi down or server unreachable"
+                  - esp32_ble_tracker.start_scan:
+                      continuous: true

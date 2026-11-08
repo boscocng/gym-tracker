@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Calendar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#0D0D0C}
+a{color:#F2F1EC}a:hover{color:#FFFFFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #0D0D0C; color: #F2F1EC; font-family: 'Barlow', system-ui, sans-serif; overflow: hidden">
+
+<header style="flex: none; padding: 52px 16px 0; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">2026</span>
+<h1 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 40px; line-height: 1">October</h1>
+</div>
+<div style="display: flex; gap: 8px">
+<button type="button" aria-label="Previous month" style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 12px; background: #171716; border: 1px solid #262624; color: #F2F1EC; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg>
+</button>
+<button type="button" aria-label="Next month" style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 12px; background: #171716; border: 1px solid #262624; color: #F2F1EC; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+</button>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; overflow-y: auto; box-sizing: border-box; padding: 18px 16px 16px; display: flex; flex-direction: column; gap: 8px">
+<div aria-hidden="true" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0.06em; color: #8A8984; text-align: center">
+<span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+<sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
+<sc-if value="{{ c.inMonth }}" hint-placeholder-val="{{ true }}">
+<a href="Day.dc.html" aria-label="{{ c.label }}" style="position: relative; display: block; height: 84px; border-radius: 8px; overflow: hidden; background: #1A1A19; color: #F2F1EC; text-decoration: none">
+<sc-if value="{{ c.hasPhoto }}" hint-placeholder-val="{{ true }}">
+<svg width="100%" height="100%" viewBox="0 0 48 84" preserveAspectRatio="xMidYMax slice" aria-hidden="true" style="position: absolute; inset: 0"><circle cx="24" cy="31" r="7" fill="#2E2E2B"></circle><path d="M7 84 L9 59 C10 50 15 44.5 20.5 43.5 L27.5 43.5 C33 44.5 38 50 39 59 L41 84 Z" fill="#2E2E2B"></path></svg>
+</sc-if>
+<sc-if value="{{ c.noPhoto }}" hint-placeholder-val="{{ false }}">
+<span aria-hidden="true" style="position: absolute; inset: 0; box-sizing: border-box; border: 1px dashed #4A4A46; border-radius: 8px"></span>
+</sc-if>
+<span style="position: absolute; top: 5px; left: 6px; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; line-height: 1">{{ c.day }}</span>
+<sc-if value="{{ c.trained }}" hint-placeholder-val="{{ true }}">
+<span aria-hidden="true" style="position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: #FF7A1A"></span>
+</sc-if>
+<sc-if value="{{ c.rest }}" hint-placeholder-val="{{ false }}">
+<span aria-hidden="true" style="position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: #5B7690"></span>
+</sc-if>
+<sc-if value="{{ c.skipped }}" hint-placeholder-val="{{ false }}">
+<span aria-hidden="true" style="position: absolute; top: 5px; right: 5px; width: 9px; height: 9px; box-sizing: border-box; border-radius: 50%; border: 1.5px solid #F2F1EC"></span>
+</sc-if>
+<span style="position: absolute; left: 0; right: 0; bottom: 0; height: 20px; background: rgba(13, 13, 12, 0.85); font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 12px; line-height: 20px; text-align: center; font-variant-numeric: tabular-nums">{{ c.weight }}</span>
+<sc-if value="{{ c.selected }}" hint-placeholder-val="{{ false }}">
+<span aria-hidden="true" style="position: absolute; inset: 0; box-sizing: border-box; border: 2px solid #FF7A1A; border-radius: 8px"></span>
+</sc-if>
+</a>
+</sc-if>
+<sc-if value="{{ c.outside }}" hint-placeholder-val="{{ false }}">
+<div aria-hidden="true" style="position: relative; height: 84px; border-radius: 8px; background: #121211">
+<span style="position: absolute; top: 5px; left: 6px; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; line-height: 1; color: #55544F">{{ c.day }}</span>
+</div>
+</sc-if>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 10px; font-size: 14px; color: #A3A29C">
+<span style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 9px; height: 9px; border-radius: 50%; background: #FF7A1A"></span>Trained <strong style="color: #F2F1EC; font-weight: 600">26</strong></span>
+<span style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 9px; height: 9px; border-radius: 50%; background: #5B7690"></span>Rest <strong style="color: #F2F1EC; font-weight: 600">4</strong></span>
+<span style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 10px; height: 10px; box-sizing: border-box; border-radius: 50%; border: 1.5px solid #F2F1EC"></span>Skipped <strong style="color: #F2F1EC; font-weight: 600">1</strong></span>
+<span style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 10px; height: 12px; box-sizing: border-box; border-radius: 3px; border: 1px dashed #8A8984"></span>No photo <strong style="color: #F2F1EC; font-weight: 600">2</strong></span>
+</div>
+</main>
+
+<dc-import name="TabBar" active="calendar" hint-size="390px,84px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const weights = [0,
+168.2, 168.6, 168.3, 168.8, 168.5, 168.9, 168.6, 169.0, 168.7, 169.1,
+168.8, 169.2, 168.9, 169.3, 169.0, 169.4, 169.1, 169.5, 169.4, 169.1,
+169.8, 169.3, 170.1, 169.6, 170.4, 169.9, 170.6, 170.2, 170.9, 170.5,
+171.3];
+const rest = [4, 11, 14, 25];
+const skipped = [18];
+const noPhoto = [9, 22];
+const selected = 29;
+const cells = [];
+[28, 29, 30].forEach((d) => {
+cells.push({ day: d, inMonth: false, outside: true });
+});
+for (let d = 1; d <= 31; d++) {
+const isRest = rest.indexOf(d) >= 0;
+const isSkip = skipped.indexOf(d) >= 0;
+const status = isRest ? 'rest' : (isSkip ? 'skipped' : 'trained');
+const hasPhoto = noPhoto.indexOf(d) < 0;
+const w = weights[d].toFixed(1);
+cells.push({
+day: d,
+inMonth: true,
+outside: false,
+weight: w,
+trained: status === 'trained',
+rest: status === 'rest',
+skipped: status === 'skipped',
+hasPhoto: hasPhoto,
+noPhoto: !hasPhoto,
+selected: d === selected,
+label: 'October ' + d + ', ' + status + ', ' + w + ' lb' + (hasPhoto ? '' : ', no photo')
+});
+}
+cells.push({ day: 1, inMonth: false, outside: true });
+return { cells: cells };
+}
+}
+</script>
+</body>
+</html>

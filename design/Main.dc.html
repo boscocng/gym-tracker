@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&amp;family=Barlow+Condensed:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#0D0D0C}
+a{color:#F2F1EC}a:hover{color:#FFFFFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 944px; box-sizing: border-box; display: flex; flex-direction: column; background: #0D0D0C; color: #F2F1EC; font-family: 'Barlow', system-ui, sans-serif; overflow: hidden">
+<main style="flex: 1; min-height: 0; overflow-y: auto; box-sizing: border-box; padding: 52px 16px 20px; display: flex; flex-direction: column; gap: 20px">
+
+<header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Sunday · Nov 1</span>
+<h1 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 40px; line-height: 1">Today</h1>
+</div>
+<a href="Settings.dc.html" aria-label="Settings" style="flex: none; width: 44px; height: 44px; box-sizing: border-box; border-radius: 12px; background: #171716; border: 1px solid #262624; display: flex; align-items: center; justify-content: center; color: #F2F1EC">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"></path><circle cx="15" cy="7" r="2"></circle><circle cx="9" cy="17" r="2"></circle></svg>
+</a>
+</header>
+
+<section aria-label="Today's checklist" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<button type="button" aria-label="Weigh-in, 171.2 lb from the scale at 7:12 am. Tap to edit." style="display: flex; flex-direction: column; justify-content: space-between; align-items: stretch; height: 104px; box-sizing: border-box; padding: 12px; border-radius: 16px; background: #171716; border: 1px solid #262624; color: #F2F1EC; font: inherit; text-align: left; cursor: pointer">
+<span style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Weigh-in</span>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF7A1A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>
+</span>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums">171.2<span style="font-size: 15px; font-weight: 600; color: #A3A29C; margin-left: 3px">lb</span></span>
+<span style="font-size: 12px; color: #8A8984">Scale · 7:12 am</span>
+</button>
+<a href="Camera.dc.html" style="display: flex; flex-direction: column; justify-content: space-between; height: 104px; box-sizing: border-box; padding: 12px; border-radius: 16px; background: #131312; border: 1px dashed #4A4A46; color: #F2F1EC; text-decoration: none">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Photo</span>
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FF7A1A" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+<span style="font-size: 15px; font-weight: 600; color: #FF7A1A">Take photo</span>
+</a>
+<a href="Log.dc.html" style="display: flex; flex-direction: column; justify-content: space-between; height: 104px; box-sizing: border-box; padding: 12px; border-radius: 16px; background: #131312; border: 1px dashed #4A4A46; color: #F2F1EC; text-decoration: none">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Workout</span>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 22px; line-height: 1">Not yet</span>
+<span style="font-size: 15px; font-weight: 600; color: #FF7A1A">Log sets</span>
+</a>
+</section>
+
+<section aria-labelledby="weight-title" style="background: #171716; border: 1px solid #262624; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+<h2 id="weight-title" style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Weight · 14 days</h2>
+<span style="font-size: 13px; color: #8A8984">7-day avg <span style="color: #F2F1EC; font-weight: 600; font-variant-numeric: tabular-nums">170.7 lb</span></span>
+</div>
+<div style="display: flex; align-items: baseline; gap: 12px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 48px; line-height: 1; font-variant-numeric: tabular-nums">+1.5<span style="font-size: 20px; font-weight: 600; color: #A3A29C; margin-left: 4px">lb</span></span>
+<span style="font-size: 15px; color: #A3A29C">0.7 lb per week</span>
+</div>
+<svg width="326" height="72" viewBox="0 0 326 72" role="img" aria-label="Daily weigh-ins over the last 14 days, with the 7-day average rising from 169.2 to 170.7 lb" style="display: block">
+<line x1="0" y1="71.5" x2="326" y2="71.5" stroke="#262624" stroke-width="1"></line>
+<polyline points="6,58.4 30.2,57.7 54.3,56.1 78.5,55.2 102.6,52.8 126.8,51.2 150.9,48.2 175.1,46.6 199.2,41.5 223.4,40.4 247.5,35.1 271.7,33.7 295.8,28.2 320,25.4" fill="none" stroke="#FF7A1A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+<g fill="#6B6A66">
+<circle cx="6" cy="54.5" r="2.5"></circle>
+<circle cx="30.2" cy="61.4" r="2.5"></circle>
+<circle cx="54.3" cy="45.2" r="2.5"></circle>
+<circle cx="78.5" cy="56.8" r="2.5"></circle>
+<circle cx="102.6" cy="38.3" r="2.5"></circle>
+<circle cx="126.8" cy="49.8" r="2.5"></circle>
+<circle cx="150.9" cy="31.4" r="2.5"></circle>
+<circle cx="175.1" cy="42.9" r="2.5"></circle>
+<circle cx="199.2" cy="26.8" r="2.5"></circle>
+<circle cx="223.4" cy="36" r="2.5"></circle>
+<circle cx="247.5" cy="19.8" r="2.5"></circle>
+<circle cx="271.7" cy="29.1" r="2.5"></circle>
+<circle cx="295.8" cy="10.6" r="2.5"></circle>
+</g>
+<circle cx="320" cy="12.9" r="4" fill="#F2F1EC"></circle>
+</svg>
+<div style="display: flex; align-items: center; gap: 16px; font-size: 12px; color: #8A8984">
+<span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #6B6A66"></span>Daily</span>
+<span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 14px; height: 3px; border-radius: 2px; background: #FF7A1A"></span>7-day average</span>
+<span style="margin-left: auto; display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #F2F1EC"></span>Today</span>
+</div>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<section aria-labelledby="strength-title" style="background: #171716; border: 1px solid #262624; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<h2 id="strength-title" style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Strength · 4 wk</h2>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+<li style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 15px">Bench</span><span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; font-variant-numeric: tabular-nums">+4.2%</span></li>
+<li style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 15px">Pull-up</span><span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; font-variant-numeric: tabular-nums">+6.0%</span></li>
+<li style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 15px">OHP</span><span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; font-variant-numeric: tabular-nums">+3.1%</span></li>
+</ul>
+<p style="margin: auto 0 0; font-size: 12px; line-height: 1.35; color: #8A8984">Change in top set, estimated 1RM</p>
+</section>
+<section aria-labelledby="consistency-title" style="background: #171716; border: 1px solid #262624; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<h2 id="consistency-title" style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Consistency</h2>
+<div style="display: flex; align-items: baseline; gap: 6px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 44px; line-height: 1">6</span>
+<span style="font-size: 15px; color: #A3A29C">of last 7</span>
+</div>
+<div role="img" aria-label="Last 7 days: rest, then 6 days trained" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+<span style="height: 14px; border-radius: 4px; background: #5B7690"></span>
+<span style="height: 14px; border-radius: 4px; background: #FF7A1A"></span>
+<span style="height: 14px; border-radius: 4px; background: #FF7A1A"></span>
+<span style="height: 14px; border-radius: 4px; background: #FF7A1A"></span>
+<span style="height: 14px; border-radius: 4px; background: #FF7A1A"></span>
+<span style="height: 14px; border-radius: 4px; background: #FF7A1A"></span>
+<span style="height: 14px; border-radius: 4px; background: #FF7A1A"></span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 14px; font-weight: 600; color: #FF7A1A">Rest unlocked</span>
+<span style="font-size: 12px; color: #8A8984">0 skips in November</span>
+</div>
+</section>
+</div>
+
+<a href="AddOns.dc.html" style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 16px; background: #171716; border: 1px solid #262624; color: #F2F1EC; text-decoration: none">
+<span style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8984">Active add-ons</span>
+<span style="display: flex; align-items: center; gap: 2px; font-size: 13px; color: #A3A29C">Manage<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg></span>
+</span>
+<span style="display: flex; flex-wrap: wrap; gap: 8px">
+<span style="display: inline-flex; align-items: baseline; gap: 6px; padding: 7px 12px; border-radius: 999px; background: #212120; font-size: 14px; font-weight: 500">Creatine<span style="color: #8A8984">day 35</span></span>
+<span style="display: inline-flex; align-items: baseline; gap: 6px; padding: 7px 12px; border-radius: 999px; background: #212120; font-size: 14px; font-weight: 500">Preworkout<span style="color: #8A8984">day 12</span></span>
+<span style="display: inline-flex; align-items: baseline; gap: 6px; padding: 7px 12px; border-radius: 999px; background: #212120; font-size: 14px; font-weight: 500">Zone 2 cardio<span style="color: #8A8984">day 28</span></span>
+</span>
+</a>
+
+</main>
+<dc-import name="TabBar" active="home" hint-size="390px,84px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":944}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
