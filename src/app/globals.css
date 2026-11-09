@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-barlow), system-ui, sans-serif;
+  --font-condensed: var(--font-barlow-condensed), var(--font-barlow), system-ui, sans-serif;
+}
+
+@theme {
+  --color-bg: #0d0d0c;
+  --color-surface: #171716;
+  --color-surface-2: #212120;
+  --color-surface-todo: #131312;
+  --color-border-todo: #4a4a46;
+  --color-tab-bar: #111110;
+  --color-border: #262624;
+  --color-border-input: #2e2e2c;
+  --color-divider: #232321;
+  --color-text: #f2f1ec;
+  --color-text-2: #a3a29c;
+  --color-label: #8a8984;
+  --color-accent: #ff7a1a;
+  --color-on-accent: #0d0d0c;
+  --color-rest: #5b7690;
+  --color-rest-icon: #8faac4;
+  --color-error-text: #ffb37a;
+  --color-note-bg: #1f1610;
+  --color-note-border: #4a2e18;
+
+  --radius-card: 16px;
+  --radius-control: 14px;
+  --radius-icon: 12px;
+}
+
+@utility caps-label {
+  font-family: var(--font-condensed);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-label);
+}
+
+@utility pt-safe {
+  padding-top: max(calc(env(safe-area-inset-top) + 8px), 24px);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-variant-numeric: tabular-nums;
+}
