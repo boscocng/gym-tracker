@@ -43,12 +43,14 @@ These are all the public projects found (November 2026) that read the S200, or t
 
    Log in with the QR code and leave the server region blank so it checks every region. S200 variants show up with model names like `xiaomi.scales.ms111` or `xiaomi.scales.ms113`. Copy the scale's MAC and its 32-character BLE KEY.
 4. Run `cp secrets.example.yaml secrets.yaml` and fill it in. `ingest_token` must match `SCALE_INGEST_TOKEN` in Vercel.
-5. Plug the ESP32 into your computer and flash it over USB: `esphome run scale-bridge.yaml`. The first flash has to be over USB because Bluetooth needs a partition change. Updates after that can go over Wi-Fi.
+5. Plug the ESP32 into your computer and flash it over USB: `esphome run scale-bridge.yaml`. On a Mac, allow the accessory when macOS asks, or the board's serial port won't show up. The first flash has to be over USB because Bluetooth needs a partition change. Updates after that can go over Wi-Fi.
 6. Watch the logs with `esphome logs scale-bridge.yaml` and step on the scale. You should see the weight, then a line like `Posted 77.65 kg, HTTP 201`.
 7. Move the ESP32 to a USB charger near the scale.
 
 ## Troubleshooting
 
+- **`pipx install esphome` fails while building `ruamel.yaml.clib`:** this happened with Python 3.15. Install with a Python 3.14 interpreter instead: `pipx install esphome --python /path/to/python3.14`.
+- **The build fails while setting up ESP-IDF's Python environment, with `No version is set for shim: uv`:** ESPHome uses `uv` when one is on the PATH, and mise's `uv` shim fails until a version is selected. Select one, for example by setting `MISE_UV_VERSION`.
 - **No weight in the logs**
   - Close Xiaomi Home on your phone and try again. One Home Assistant user only got readings after turning their phone off.
   - Double-check the MAC and bindkey. If in doubt, run the extractor again.
