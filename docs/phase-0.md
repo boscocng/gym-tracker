@@ -13,7 +13,7 @@ Checked on 2026-11-08. `SPEC.md` section 11 asks Phase 0 for three things: curre
 | Tailwind CSS | 4.3.5 | Tokens go in the CSS `@theme` block. There's no `tailwind.config.js` any more. |
 | Zod | 4.6.7 | |
 | Vitest | 5.1.0 | |
-| ESLint | 10.14.0, with eslint-config-next 16.4.5 | |
+| ESLint | pin 9.39.5, with eslint-config-next 16.4.5 | `latest` is 10.14.0, but eslint-plugin-react, -import and -jsx-a11y (which eslint-config-next uses) only support ESLint 9. npm marks 9.x as deprecated. |
 | Supabase CLI | 3.0.0, released 2026-11-02 | New major version: commands target the local stack by default and ask before touching a hosted project. The 2.x line is at 2.122.1. |
 | @supabase/supabase-js | 2.119.0 | |
 | @supabase/ssr | 0.12.7 | |
