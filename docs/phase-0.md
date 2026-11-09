@@ -1,6 +1,6 @@
 # Phase 0: findings and proposals
 
-Checked on 2026-11-08. `SPEC.md` section 11 asks Phase 0 for three things: current versions and APIs, an iPhone spike, and a proposed schema and folder structure. Nothing here is app code. The schema in section 4 is a proposal, run once against a throwaway Postgres 17 to make sure it behaves as described.
+Checked on 2026-11-08. `SPEC.md` section 11 asks Phase 0 for three things: current versions and APIs, an iPhone spike, and a proposed schema and folder structure. A scale test was added afterwards, at the end of section 3. Nothing here is app code. The schema in section 4 is a proposal, run against a throwaway Postgres 17 to make sure it behaves as described.
 
 ## 1. Versions
 
@@ -50,18 +50,18 @@ Checked on 2026-11-08. `SPEC.md` section 11 asks Phase 0 for three things: curre
     - On the spike, the `<project>.vercel.app` production URL is public, and each per-deployment URL redirects to Vercel's login.
     - So the ESP32 and Claude must use the production domain, as the spec already says.
 12. **TypeScript settings.** Pin TypeScript 6.0.x until typescript-eslint supports 7. When Next.js generates `tsconfig.json` itself it sets `"strict": false`, so Phase 1 must turn strict mode on.
-13. **ESP32: `profile_id` lags one reading.** In ESPHome 2026.10.2, `xiaomi_body_scale.cpp` publishes the weight (line 129) before the profile ID (line 135).
-    - `on_value` therefore builds the JSON while `scale_profile` still holds the previous reading's profile. The first post after boot has no `profile_id`, and every later post carries the previous reading's profile.
-    - No rule in the spec uses `profile_id`, so the impact is low.
-    - A likely fix, not compiled or tested: make `- delay: 0s` the first action under `on_value`. I left `scale-bridge.yaml` alone, since the spec says not to write firmware.
+13. **ESP32: `profile_id` lagged one reading, so the bridge no longer sends it.** In ESPHome 2026.10.2, `xiaomi_body_scale.cpp` publishes the weight (line 129) before the profile ID (line 135).
+    - `on_value` therefore built the JSON while `scale_profile` still held the previous reading's profile. The first post after boot had no `profile_id`, and every later post carried the previous reading's profile.
+    - No rule in the spec uses it, so `scale-bridge.yaml` no longer reads it, posts carry only `weight_kg`, and the schema in section 4 has no column for it.
+    - The spec still lists it in section 5 (`weigh_ins`) and section 7 (the request body).
 14. **Design gaps.**
     - The Settings design has no rows for time zone, rest rule or sign-out, though the spec lists all three.
     - The Day design shows a workout label ("Trained · Pull") and "+0.9 vs last week", and the spec defines neither.
     - Settings shows the scale as "Connected", which the app can't know: the ESP32 only posts when someone steps on the scale. See section 6.
 
-## 3. The iPhone spike
+## 3. The spike
 
-Live at **https://gym-tracker-spike.vercel.app**. The source is in `spike/`, deployed as its own Vercel project (`gym-tracker-spike`), which isn't connected to GitHub. Delete both after the tests.
+Live at **https://gym-tracker-spike.vercel.app**. The source is in `spike/`, deployed as its own Vercel project (`gym-tracker-spike`), which isn't connected to GitHub. Delete both after the tests, but only once the scale bridge posts to the real app (see the scale test below).
 
 One page runs three tests, each with its own instructions:
 
@@ -106,6 +106,20 @@ Sources are Apple and WebKit where they exist; "reported" means bug reports or f
 8. On a computer, open claude.ai, Customize, Connectors, Add custom connector. Is there a "Request headers" section? Don't add anything. This decides the MCP auth question in section 6.
 9. When you report back, include the iOS version (Settings, General, About).
 
+### Scale test
+
+Added because the ESPHome component is new and the scale could still be returned. **It works:** the bridge decoded a weigh-in, the post reached Vercel, and the decoded weight matched the scale's display.
+
+- **Setup.** `esp32/scale-bridge.yaml` without `profile_id` (section 2, item 13), built with ESPHome 2026.10.2 and flashed over USB, with `secrets.yaml` pointing at the spike's production URL. The spike's temporary `POST /api/scale` (`spike/app/api/scale/route.ts`) compares `X-Scale-Token` with `SCALE_INGEST_TOKEN` in constant time, refuses a `Content-Length` over 1 KB, logs the body and returns 201.
+- **Result.** One weigh-in gave one post. The board logged the weight and `HTTP 201`, and Vercel's runtime log shows a production `POST /api/scale` whose body held only `weight_kg`. The component ignores repeat broadcasts of a frame it has already decoded.
+- **Not tested:** a failed post, updating the board over Wi-Fi, and running for days without a restart.
+- **Next.** When Phase 1's `/api/scale` is live, put its URL and a new token in `secrets.yaml` and update the board over Wi-Fi. Delete the spike project only after that, so the board never posts to an address the project no longer owns.
+
+Setup notes worth adding to `esp32/README.md`:
+- `pipx install esphome` failed under Homebrew's Python 3.15 while building `ruamel.yaml.clib`. Pointing pipx at a Python 3.14 interpreter (`--python /path/to/python3.14`) worked.
+- The build sets up ESP-IDF's Python packages with `uv` if one is on the PATH. A mise `uv` shim with no version selected is on the PATH but fails; selecting a version (this test used `MISE_UV_VERSION=0.12.7`) fixes it.
+- macOS asks whether to allow a newly connected accessory, and the board's serial port only appears after you allow it.
+
 ## 4. Proposed schema
 
 Principles:
@@ -123,6 +137,7 @@ Changes from the spec's starting point:
 5. **The database enforces the skip rules:** a skip reason has at least 20 characters after trimming, skips can't be deleted, and only the reason can be edited.
 6. **Add-on periods can't overlap**, and each add-on has at most one open period.
 7. **Aliases are stored in the parser's normalized form**: lowercase letters and single spaces, so "pull-up" is stored as "pull up". Lookup is then an exact match.
+8. **`weigh_ins` has no profile ID**, since the scale bridge no longer sends one (section 2, item 13).
 
 ```sql
 create extension if not exists btree_gist with schema extensions;
@@ -193,10 +208,9 @@ create table public.weigh_ins (
   unit public.weight_unit not null,
   kg numeric(7, 3) generated always as (public.to_kg(value, unit)) stored,
   source public.weigh_in_source not null,
-  profile_id smallint,
   flag public.weigh_in_flag,
   check (kg between 20 and 300),
-  check (source = 'scale' or (profile_id is null and flag is null))
+  check (source = 'scale' or flag is null)
 );
 create unique index weigh_ins_one_manual_per_day on public.weigh_ins (day) where source = 'manual';
 
