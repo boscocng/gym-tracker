@@ -4,11 +4,15 @@ node_modules/
 out/
 build/
 coverage/
+*.tsbuildinfo
+next-env.d.ts
+.vercel/
 
 # Environment and secrets
 .env
 .env.*
 !.env.example
+*.pem
 esp32/secrets.yaml
 esp32/.esphome/
 
