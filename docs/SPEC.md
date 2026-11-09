@@ -99,7 +99,7 @@ Propose the final schema in Phase 0 for review. Starting point:
 - `exercises`: name, `is_bodyweight`, archived.
 - `exercise_aliases`: alias (lowercase, unique) and exercise id. Each exercise's own name is also an alias.
 - `sets`: day, exercise id, set number, load value, load unit, a generated `load_kg`, reps, the raw input text, created at.
-- `weigh_ins`: measured at, day, value, unit, a generated `kg`, source (`scale` or `manual`), profile id (nullable, from the scale), and flags (`duplicate`, `outlier`).
+- `weigh_ins`: measured at, day, value, unit, a generated `kg`, source (`scale` or `manual`), and flags (`duplicate`, `outlier`).
 - `day_marks`: day (unique), kind (`rest` or `skip`), reason (required for skips), resolved via (`normal` or `lock`), created at. "Trained" isn't stored: a day is trained if it has at least one set.
 - `photos`: day, storage path, thumbnail path, taken at. One current photo per day; a retake replaces it.
 - `addons` (name) and `addon_periods` (addon id, details, start day, end day, which stays null while active).
@@ -211,7 +211,7 @@ The unit tests must include at least these inputs:
 `POST /api/scale`:
 
 - The `X-Scale-Token` header must equal `SCALE_INGEST_TOKEN` (compare in constant time). Otherwise return 401.
-- The body is `{ "weight_kg": number, "profile_id"?: number }`. Only accept weights from 20 to 300 kg.
+- The body is `{ "weight_kg": number }`. Only accept weights from 20 to 300 kg.
 - The server sets the timestamp, computes the day, applies the 6.6 flags and stores the reading. It returns 201 with the stored record, or 200 if the reading was flagged as a duplicate.
 - Skip the auth middleware for this route. It must work on the production URL: Vercel protects preview URLs by default, so the ESP32 always points at production.
 - The Settings screen shows when the last scale reading arrived, so a dead ESP32 gets noticed.
