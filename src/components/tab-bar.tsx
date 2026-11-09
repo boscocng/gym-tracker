@@ -53,7 +53,7 @@ export function TabBar() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 grid grid-cols-4 border-t border-divider bg-tab-bar px-2 pt-1.5 pb-[max(env(safe-area-inset-bottom),8px)] font-condensed"
+      className="fixed inset-x-0 bottom-0 grid h-(--tab-bar-height) grid-cols-4 border-t border-divider bg-tab-bar px-2 pt-1.5 pb-[max(env(safe-area-inset-bottom),8px)] font-condensed"
     >
       {tabs.map((tab) => {
         const active = isActive(pathname, tab.href);

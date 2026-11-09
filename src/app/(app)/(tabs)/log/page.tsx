@@ -1,5 +1,45 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { formatDayLabel } from "@/rules/format";
+import { groupByExercise, loadLabel, logSummary } from "@/rules/sets";
+import { trainingDay } from "@/rules/training-day";
+import { weightIn } from "@/rules/units";
+import { requireOwnerSettings } from "@/server/settings";
+import { createSessionClient } from "@/server/supabase";
+import { type LogGroup, LogScreen } from "./log-screen";
 
-export default function LogPage() {
-  return <PlaceholderPage title="Log" phase={2} />;
+export default async function LogPage() {
+  const settings = await requireOwnerSettings();
+  const today = trainingDay(new Date(), settings.time_zone, settings.rollover_hour);
+
+  const supabase = await createSessionClient();
+  const { data: sets, error } = await supabase
+    .from("sets")
+    .select("id, exercise_id, load_value, load_unit, load_kg, reps, exercises(name, is_bodyweight)")
+    .eq("day", today)
+    .order("created_at")
+    .order("id");
+  if (error) {
+    throw error;
+  }
+
+  const groups: LogGroup[] = groupByExercise(sets.map((set) => ({ ...set, exerciseId: set.exercise_id }))).map(
+    (group) => {
+      const { name, is_bodyweight } = group.sets[0].exercises;
+      return {
+        exerciseId: group.exerciseId,
+        name,
+        rows: group.sets.map((set) => {
+          const amount = weightIn(settings.unit, { value: set.load_value, unit: set.load_unit, kg: set.load_kg });
+          return {
+            id: set.id,
+            number: set.number,
+            load: loadLabel(is_bodyweight, amount),
+            unit: is_bodyweight && amount === 0 ? null : settings.unit,
+            reps: set.reps,
+          };
+        }),
+      };
+    },
+  );
+
+  return <LogScreen dayLabel={formatDayLabel(today)} summary={logSummary(sets.length, groups.length)} groups={groups} />;
 }

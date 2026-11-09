@@ -4,7 +4,7 @@ import { TabBar } from "@/components/tab-bar";
 export default function TabsLayout({ children }: { children: ReactNode }) {
   return (
     <>
-      <div className="pb-[calc(72px+env(safe-area-inset-bottom))]">{children}</div>
+      <div className="pb-(--tab-bar-height)">{children}</div>
       <TabBar />
     </>
   );

@@ -45,6 +45,7 @@
 
 :root {
   color-scheme: dark;
+  --tab-bar-height: calc(57px + max(env(safe-area-inset-bottom), 8px));
 }
 
 body {
