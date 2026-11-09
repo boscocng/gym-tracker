@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PARSE_ERROR } from "@/rules/parse-set";
 import { requireOwnerSettings } from "@/server/settings";
 import { createSessionClient } from "@/server/supabase";
-import { deleteSet, logSet, logSetAs, logSetAsNew } from "./actions";
+import { deleteSet, logSet, logSetAs, logSetAsNew, updateSet } from "./actions";
 
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 vi.mock("@/server/settings", () => ({ requireOwnerSettings: vi.fn() }));
@@ -241,5 +241,41 @@ describe("deleteSet", () => {
   it("rejects an id that isn't a row id", async () => {
     await expect(deleteSet(1.5)).rejects.toThrow();
     expect(createSessionClient).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateSet", () => {
+  it("updates the load and reps of the set", async () => {
+    const calls = fakeSupabase({ sets: [{ data: { id: 7 }, error: null }] });
+
+    expect(await updateSet(7, " 187.5 ", "5")).toBeNull();
+
+    expect(calls).toEqual([
+      ["from", "sets"],
+      ["update", { load_value: 187.5, reps: 5 }],
+      ["eq", "id", 7],
+      ["select", "id"],
+      ["maybeSingle"],
+    ]);
+    expect(refresh).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    ["an empty weight", "", "5"],
+    ["a weight that isn't a number", "heavy", "5"],
+    ["a negative weight", "-5", "5"],
+    ["an impossible weight", "10000", "5"],
+    ["zero reps", "185", "0"],
+    ["fractional reps", "185", "5.5"],
+    ["too many reps", "185", "1000"],
+  ])("rejects %s without touching the database", async (_name, load, reps) => {
+    expect(await updateSet(7, load, reps)).toMatch(/whole reps/);
+    expect(createSessionClient).not.toHaveBeenCalled();
+  });
+
+  it("says so when the set is gone", async () => {
+    fakeSupabase({ sets: [{ data: null, error: null }] });
+    expect(await updateSet(7, "185", "5")).toMatch(/isn’t there/);
+    expect(refresh).not.toHaveBeenCalled();
   });
 });

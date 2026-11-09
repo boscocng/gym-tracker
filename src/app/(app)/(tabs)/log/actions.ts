@@ -27,10 +27,24 @@ const UNIQUE_VIOLATION = "23505";
 const EXERCISE_GONE = "That exercise isn’t there any more. Pick another one.";
 const NAME_TAKEN = "You already have an exercise with that name. Pick it from the list or choose another name.";
 const NEEDS_WEIGHT = "That exercise needs a weight. Close this and say the set again with the weight.";
+const EDIT_INVALID = "Enter the weight as a number up to 9999.99, and whole reps from 1 to 999.";
+const SET_GONE = "That set isn’t there any more.";
 
 const setText = z.string().trim().min(1).max(200);
 const rowId = z.number().int().positive();
 const exerciseName = z.string().trim().min(1).max(60);
+const loadText = z
+  .string()
+  .trim()
+  .regex(/^\d+(\.\d+)?$/)
+  .transform(Number)
+  .pipe(z.number().max(9999.99));
+const repsText = z
+  .string()
+  .trim()
+  .regex(/^\d+$/)
+  .transform(Number)
+  .pipe(z.number().int().min(1).max(999));
 
 async function readAliases(supabase: Session): Promise<Map<string, AliasTarget>> {
   const { data, error } = await supabase
@@ -170,4 +184,29 @@ export async function deleteSet(id: number): Promise<void> {
     throw error;
   }
   refresh();
+}
+
+export async function updateSet(id: number, load: string, reps: string): Promise<string | null> {
+  await requireOwnerSettings();
+  const setId = rowId.safeParse(id);
+  const loadValue = loadText.safeParse(load);
+  const repCount = repsText.safeParse(reps);
+  if (!setId.success || !loadValue.success || !repCount.success) {
+    return EDIT_INVALID;
+  }
+  const supabase = await createSessionClient();
+  const { data, error } = await supabase
+    .from("sets")
+    .update({ load_value: loadValue.data, reps: repCount.data })
+    .eq("id", setId.data)
+    .select("id")
+    .maybeSingle();
+  if (error) {
+    throw error;
+  }
+  if (!data) {
+    return SET_GONE;
+  }
+  refresh();
+  return null;
 }

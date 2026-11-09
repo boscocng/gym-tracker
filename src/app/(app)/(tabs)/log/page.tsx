@@ -4,7 +4,8 @@ import { trainingDay } from "@/rules/training-day";
 import { weightIn } from "@/rules/units";
 import { requireOwnerSettings } from "@/server/settings";
 import { createSessionClient } from "@/server/supabase";
-import { type LogGroup, LogScreen } from "./log-screen";
+import { LogScreen } from "./log-screen";
+import type { LogGroup } from "./set-list";
 
 export default async function LogPage() {
   const settings = await requireOwnerSettings();
@@ -35,6 +36,7 @@ export default async function LogPage() {
       return {
         exerciseId: group.exerciseId,
         name,
+        isBodyweight: is_bodyweight,
         rows: group.sets.map((set) => {
           const amount = weightIn(settings.unit, { value: set.load_value, unit: set.load_unit, kg: set.load_kg });
           return {
@@ -43,6 +45,8 @@ export default async function LogPage() {
             load: loadLabel(is_bodyweight, amount),
             unit: is_bodyweight && amount === 0 ? null : settings.unit,
             reps: set.reps,
+            loadValue: set.load_value,
+            loadUnit: set.load_unit,
           };
         }),
       };
