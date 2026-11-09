@@ -1,12 +1,15 @@
 "use client";
 
-import { type FormEvent, useState, useTransition } from "react";
-import { deleteSet, type LogResult, logSet } from "./actions";
+import { useState, useTransition } from "react";
+import { deleteSet, type LogResult, logSet, logSetAs, logSetAsNew } from "./actions";
+import { LogDock } from "./log-dock";
+import { type ExerciseOption, UnknownExerciseSheet } from "./unknown-exercise";
 
 export type LogRow = { id: number; number: number; load: string; unit: string | null; reps: number };
 export type LogGroup = { exerciseId: number; name: string; rows: LogRow[] };
 
-type Props = { dayLabel: string; summary: string; groups: LogGroup[] };
+type Props = { dayLabel: string; summary: string; groups: LogGroup[]; exercises: ExerciseOption[] };
+type Unknown = { text: string; spokenName: string; loadGiven: boolean };
 
 const SAVE_FAILED = "Couldn’t save that. Check your connection and try again.";
 
@@ -74,167 +77,99 @@ function SetCard({ group, lastId }: { group: LogGroup; lastId: number | null }) 
   );
 }
 
-function UndoBar({ text, onUndo, disabled }: { text: string; onUndo: () => void; disabled: boolean }) {
+function LogHeader({ dayLabel, summary }: { dayLabel: string; summary: string }) {
   return (
-    <div
-      role="status"
-      className="flex items-center justify-between gap-2.5 rounded-icon border border-border bg-surface py-1 pr-1 pl-3"
-    >
-      <span className="flex min-w-0 items-center gap-2 text-sm">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-          className="flex-none text-accent"
-        >
-          <path d="m5 12.5 4.5 4.5L19 7.5" />
-        </svg>
-        <span className="truncate">{text}</span>
-      </span>
-      <button
-        type="button"
-        onClick={onUndo}
-        disabled={disabled}
-        className="flex h-10 flex-none items-center gap-1.5 rounded-[9px] bg-border px-3 text-sm font-semibold disabled:opacity-60"
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M9 6 4 11l5 5" />
-          <path d="M4 11h11a5 5 0 0 1 0 10h-3" />
-        </svg>
-        Undo
-      </button>
-    </div>
+    <header className="flex items-end justify-between gap-3 px-4 pt-safe pb-3">
+      <div className="flex flex-col gap-1.5">
+        <span className="caps-label text-[13px]">{dayLabel}</span>
+        <h1 className="font-condensed text-[40px] leading-none font-bold">Log</h1>
+      </div>
+      <span className="pb-1 text-sm text-text-2">{summary}</span>
+    </header>
   );
 }
 
-export function LogScreen({ dayLabel, summary, groups }: Props) {
+function LogBody({ groups, lastId }: { groups: readonly LogGroup[]; lastId: number | null }) {
+  if (groups.length === 0) {
+    return <EmptyState />;
+  }
+  return (
+    <main className="flex flex-1 flex-col gap-2.5 px-4 pt-1 pb-4">
+      {groups.map((group) => (
+        <SetCard key={group.exerciseId} group={group} lastId={lastId} />
+      ))}
+    </main>
+  );
+}
+
+export function LogScreen({ dayLabel, summary, groups, exercises }: Props) {
   const [draft, setDraft] = useState("");
   const [lastId, setLastId] = useState<number | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [unknown, setUnknown] = useState<Unknown | null>(null);
+  const [sheetError, setSheetError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const lastText = lastAdded(groups, lastId);
 
-  function handle(result: LogResult) {
-    if (result.kind === "added") {
-      setDraft("");
-      setLastId(result.setId);
-      setMessage(null);
-    } else if (result.kind === "unknown") {
-      setMessage(`“${result.spokenName}” isn’t one of your exercises yet.`);
-    } else {
-      setMessage(result.message);
-    }
-  }
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const text = draft;
+  function run(text: string, fromSheet: boolean, action: () => Promise<LogResult>) {
     startTransition(async () => {
-      try {
-        handle(await logSet(text));
-      } catch {
-        setMessage(SAVE_FAILED);
+      const result = await action().catch((): LogResult => ({ kind: "error", message: SAVE_FAILED }));
+      setSheetError(null);
+      if (result.kind === "added") {
+        setDraft("");
+        setLastId(result.setId);
+        setMessage(null);
+        setUnknown(null);
+      } else if (result.kind === "unknown") {
+        setUnknown({ text, spokenName: result.spokenName, loadGiven: result.loadGiven });
+      } else if (fromSheet) {
+        setSheetError(result.message);
+      } else {
+        setMessage(result.message);
       }
     });
   }
 
-  function undo() {
-    const id = lastId;
-    if (id === null) {
-      return;
-    }
+  function undo(id: number) {
     startTransition(async () => {
-      try {
-        await deleteSet(id);
-        setLastId(null);
-      } catch {
-        setMessage(SAVE_FAILED);
-      }
+      await deleteSet(id).then(
+        () => setLastId(null),
+        () => setMessage(SAVE_FAILED),
+      );
     });
   }
 
   return (
     <div className="flex min-h-[calc(100dvh_-_var(--tab-bar-height))] flex-col">
-      <header className="flex items-end justify-between gap-3 px-4 pt-safe pb-3">
-        <div className="flex flex-col gap-1.5">
-          <span className="caps-label text-[13px]">{dayLabel}</span>
-          <h1 className="font-condensed text-[40px] leading-none font-bold">Log</h1>
-        </div>
-        <span className="pb-1 text-sm text-text-2">{summary}</span>
-      </header>
+      <LogHeader dayLabel={dayLabel} summary={summary} />
 
-      {groups.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <main className="flex flex-1 flex-col gap-2.5 px-4 pt-1 pb-4">
-          {groups.map((group) => (
-            <SetCard key={group.exerciseId} group={group} lastId={lastId} />
-          ))}
-        </main>
+      <LogBody groups={groups} lastId={lastId} />
+
+      <LogDock
+        draft={draft}
+        lastText={lastAdded(groups, lastId)}
+        message={message}
+        pending={pending}
+        onDraftChange={(text) => {
+          setDraft(text);
+          setMessage(null);
+        }}
+        onSubmit={() => run(draft, false, () => logSet(draft))}
+        onUndo={() => lastId !== null && undo(lastId)}
+      />
+
+      {unknown && (
+        <UnknownExerciseSheet
+          key={unknown.text}
+          spokenName={unknown.spokenName}
+          loadGiven={unknown.loadGiven}
+          exercises={exercises}
+          pending={pending}
+          error={sheetError}
+          onClose={() => setUnknown(null)}
+          onPick={(exerciseId) => run(unknown.text, true, () => logSetAs(unknown.text, exerciseId))}
+          onCreate={(name, bodyweight) => run(unknown.text, true, () => logSetAsNew(unknown.text, name, bodyweight))}
+        />
       )}
-
-      <div className="sticky bottom-(--tab-bar-height) flex flex-col gap-2 border-t border-divider bg-bg px-4 pt-2.5 pb-3">
-        {lastText && <UndoBar text={lastText} onUndo={undo} disabled={pending} />}
-        {message && (
-          <p role="alert" className="text-sm text-error-text">
-            {message}
-          </p>
-        )}
-        <form onSubmit={submit} className="flex items-center gap-2">
-          <input
-            type="text"
-            value={draft}
-            onChange={(event) => {
-              setDraft(event.target.value);
-              setMessage(null);
-            }}
-            aria-label="Log a set by voice or typing"
-            placeholder="Say a set: bench 185 for 6"
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck={false}
-            enterKeyHint="send"
-            className="h-[52px] min-w-0 flex-1 rounded-control border border-border-input bg-surface px-4 text-base font-medium text-text outline-none placeholder:text-label focus:border-accent"
-          />
-          <button
-            type="submit"
-            aria-label="Add set"
-            disabled={pending}
-            className="flex size-[52px] flex-none items-center justify-center rounded-control bg-accent text-on-accent disabled:opacity-60"
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.25"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M12 19V5M6 11l6-6 6 6" />
-            </svg>
-          </button>
-        </form>
-      </div>
     </div>
   );
 }

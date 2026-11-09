@@ -20,6 +20,14 @@ export default async function LogPage() {
   if (error) {
     throw error;
   }
+  const { data: exercises, error: exercisesError } = await supabase
+    .from("exercises")
+    .select("id, name")
+    .eq("archived", false)
+    .order("name");
+  if (exercisesError) {
+    throw exercisesError;
+  }
 
   const groups: LogGroup[] = groupByExercise(sets.map((set) => ({ ...set, exerciseId: set.exercise_id }))).map(
     (group) => {
@@ -41,5 +49,12 @@ export default async function LogPage() {
     },
   );
 
-  return <LogScreen dayLabel={formatDayLabel(today)} summary={logSummary(sets.length, groups.length)} groups={groups} />;
+  return (
+    <LogScreen
+      dayLabel={formatDayLabel(today)}
+      summary={logSummary(sets.length, groups.length)}
+      groups={groups}
+      exercises={exercises}
+    />
+  );
 }

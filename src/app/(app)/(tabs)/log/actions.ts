@@ -2,7 +2,15 @@
 
 import { refresh } from "next/cache";
 import { z } from "zod";
-import { type AliasTarget, PARSE_ERROR, parseSet } from "@/rules/parse-set";
+import {
+  type AliasTarget,
+  normalizeAlias,
+  PARSE_ERROR,
+  type ParsedSet,
+  type ParseResult,
+  parseSet,
+  setValues,
+} from "@/rules/parse-set";
 import { trainingDay } from "@/rules/training-day";
 import { requireOwnerSettings } from "@/server/settings";
 import { createSessionClient } from "@/server/supabase";
@@ -15,8 +23,14 @@ export type LogResult =
 type Session = Awaited<ReturnType<typeof createSessionClient>>;
 type Settings = Awaited<ReturnType<typeof requireOwnerSettings>>;
 
+const UNIQUE_VIOLATION = "23505";
+const EXERCISE_GONE = "That exercise isn’t there any more. Pick another one.";
+const NAME_TAKEN = "You already have an exercise with that name. Pick it from the list or choose another name.";
+const NEEDS_WEIGHT = "That exercise needs a weight. Close this and say the set again with the weight.";
+
 const setText = z.string().trim().min(1).max(200);
 const rowId = z.number().int().positive();
+const exerciseName = z.string().trim().min(1).max(60);
 
 async function readAliases(supabase: Session): Promise<Map<string, AliasTarget>> {
   const { data, error } = await supabase
@@ -30,24 +44,23 @@ async function readAliases(supabase: Session): Promise<Map<string, AliasTarget>>
   );
 }
 
-async function saveParsedSet(
-  supabase: Session,
-  settings: Settings,
-  text: string,
-  aliases: ReadonlyMap<string, AliasTarget>,
-): Promise<LogResult> {
-  const result = parseSet(text, aliases, settings.unit);
-  if (result.kind !== "set") {
-    return result;
+async function addAliases(supabase: Session, exerciseId: number, aliases: readonly string[]) {
+  const rows = [...new Set(aliases.filter(Boolean))].map((alias) => ({ alias, exercise_id: exerciseId }));
+  const { error } = await supabase.from("exercise_aliases").upsert(rows, { onConflict: "alias", ignoreDuplicates: true });
+  if (error) {
+    throw error;
   }
+}
+
+async function insertSet(supabase: Session, settings: Settings, text: string, set: ParsedSet): Promise<LogResult> {
   const { data, error } = await supabase
     .from("sets")
     .insert({
       day: trainingDay(new Date(), settings.time_zone, settings.rollover_hour),
-      exercise_id: result.set.exerciseId,
-      load_value: result.set.loadValue,
-      load_unit: result.set.loadUnit,
-      reps: result.set.reps,
+      exercise_id: set.exerciseId,
+      load_value: set.loadValue,
+      load_unit: set.loadUnit,
+      reps: set.reps,
       raw_input: text,
     })
     .select("id")
@@ -59,6 +72,16 @@ async function saveParsedSet(
   return { kind: "added", setId: data.id };
 }
 
+async function store(supabase: Session, settings: Settings, text: string, result: ParseResult): Promise<LogResult> {
+  if (result.kind === "error") {
+    return result;
+  }
+  if (result.kind === "unknown") {
+    return { kind: "unknown", spokenName: result.spokenName, loadGiven: result.reading.load !== null };
+  }
+  return insertSet(supabase, settings, text, result.set);
+}
+
 export async function logSet(text: string): Promise<LogResult> {
   const settings = await requireOwnerSettings();
   const input = setText.safeParse(text);
@@ -66,7 +89,76 @@ export async function logSet(text: string): Promise<LogResult> {
     return { kind: "error", message: PARSE_ERROR };
   }
   const supabase = await createSessionClient();
-  return saveParsedSet(supabase, settings, input.data, await readAliases(supabase));
+  const result = parseSet(input.data, await readAliases(supabase), settings.unit);
+  return store(supabase, settings, input.data, result);
+}
+
+export async function logSetAs(text: string, exerciseId: number): Promise<LogResult> {
+  const settings = await requireOwnerSettings();
+  const input = setText.safeParse(text);
+  const id = rowId.safeParse(exerciseId);
+  if (!input.success || !id.success) {
+    return { kind: "error", message: PARSE_ERROR };
+  }
+  const supabase = await createSessionClient();
+  const result = parseSet(input.data, await readAliases(supabase), settings.unit);
+  if (result.kind !== "unknown") {
+    return store(supabase, settings, input.data, result);
+  }
+
+  const { data: exercise, error } = await supabase
+    .from("exercises")
+    .select("id, is_bodyweight")
+    .eq("id", id.data)
+    .maybeSingle();
+  if (error) {
+    throw error;
+  }
+  if (!exercise) {
+    return { kind: "error", message: EXERCISE_GONE };
+  }
+  const values = setValues(result.reading, exercise.is_bodyweight);
+  if (!values) {
+    return { kind: "error", message: NEEDS_WEIGHT };
+  }
+  await addAliases(supabase, exercise.id, [result.spokenName]);
+  return insertSet(supabase, settings, input.data, { exerciseId: exercise.id, ...values });
+}
+
+export async function logSetAsNew(text: string, name: string, isBodyweight: boolean): Promise<LogResult> {
+  const settings = await requireOwnerSettings();
+  const input = setText.safeParse(text);
+  const newName = exerciseName.safeParse(name);
+  const bodyweight = z.boolean().safeParse(isBodyweight);
+  if (!input.success) {
+    return { kind: "error", message: PARSE_ERROR };
+  }
+  if (!newName.success || !bodyweight.success) {
+    return { kind: "error", message: "Give the exercise a name of up to 60 characters." };
+  }
+  const supabase = await createSessionClient();
+  const result = parseSet(input.data, await readAliases(supabase), settings.unit);
+  if (result.kind !== "unknown") {
+    return store(supabase, settings, input.data, result);
+  }
+  const values = setValues(result.reading, bodyweight.data);
+  if (!values) {
+    return { kind: "error", message: NEEDS_WEIGHT };
+  }
+
+  const { data: exercise, error } = await supabase
+    .from("exercises")
+    .insert({ name: newName.data, is_bodyweight: bodyweight.data })
+    .select("id")
+    .single();
+  if (error?.code === UNIQUE_VIOLATION) {
+    return { kind: "error", message: NAME_TAKEN };
+  }
+  if (error) {
+    throw error;
+  }
+  await addAliases(supabase, exercise.id, [normalizeAlias(newName.data), result.spokenName]);
+  return insertSet(supabase, settings, input.data, { exerciseId: exercise.id, ...values });
 }
 
 export async function deleteSet(id: number): Promise<void> {

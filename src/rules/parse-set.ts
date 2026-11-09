@@ -4,11 +4,15 @@ type WeightUnit = Enums<"weight_unit">;
 
 export type AliasTarget = { exerciseId: number; isBodyweight: boolean };
 
-export type ParsedSet = { exerciseId: number; loadValue: number; loadUnit: WeightUnit; reps: number };
+export type SetValues = { loadValue: number; loadUnit: WeightUnit; reps: number };
+
+export type ParsedSet = SetValues & { exerciseId: number };
+
+export type SetReading = { load: number | null; unit: WeightUnit; reps: number };
 
 export type ParseResult =
   | { kind: "set"; set: ParsedSet }
-  | { kind: "unknown"; spokenName: string; loadGiven: boolean }
+  | { kind: "unknown"; spokenName: string; reading: SetReading }
   | { kind: "error"; message: string };
 
 export const PARSE_ERROR = "Couldn’t read that. Try “bench 185 for 6”.";
@@ -87,7 +91,6 @@ const TENS = new Map(
 );
 
 type NumberWord = { value: number; next: number };
-type Reading = { load: number | null; unit: WeightUnit; reps: number };
 
 function isNumber(token: string): boolean {
   return /^\d/.test(token);
@@ -194,7 +197,7 @@ function findAlias(tokens: readonly string[], aliases: ReadonlyMap<string, Alias
   return best;
 }
 
-function readNumbers(tokens: readonly string[], defaultUnit: WeightUnit): Reading | null {
+function readNumbers(tokens: readonly string[], defaultUnit: WeightUnit): SetReading | null {
   const reps: number[] = [];
   const loads: { value: number; unit: WeightUnit | undefined }[] = [];
   const plain: number[] = [];
@@ -234,6 +237,11 @@ function readNumbers(tokens: readonly string[], defaultUnit: WeightUnit): Readin
   };
 }
 
+export function setValues(reading: SetReading, isBodyweight: boolean): SetValues | null {
+  const load = reading.load ?? (isBodyweight ? 0 : null);
+  return load === null ? null : { loadValue: load, loadUnit: reading.unit, reps: reading.reps };
+}
+
 export function parseSet(
   text: string,
   aliases: ReadonlyMap<string, AliasTarget>,
@@ -251,17 +259,10 @@ export function parseSet(
   // Any exercise word the alias doesn't cover ("zercher" in "zercher squat") means a different exercise.
   if (!match || words.some(isNameWord)) {
     const spokenName = convertNumberWords(dropSetNumbers(tokens)).filter(isNameWord).join(" ");
-    return spokenName
-      ? { kind: "unknown", spokenName, loadGiven: reading.load !== null }
-      : { kind: "error", message: PARSE_ERROR };
+    return spokenName ? { kind: "unknown", spokenName, reading } : { kind: "error", message: PARSE_ERROR };
   }
-
-  const load = reading.load ?? (match.target.isBodyweight ? 0 : null);
-  if (load === null) {
-    return { kind: "error", message: PARSE_ERROR };
-  }
-  return {
-    kind: "set",
-    set: { exerciseId: match.target.exerciseId, loadValue: load, loadUnit: reading.unit, reps: reading.reps },
-  };
+  const values = setValues(reading, match.target.isBodyweight);
+  return values
+    ? { kind: "set", set: { exerciseId: match.target.exerciseId, ...values } }
+    : { kind: "error", message: PARSE_ERROR };
 }

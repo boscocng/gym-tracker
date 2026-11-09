@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PARSE_ERROR } from "@/rules/parse-set";
 import { requireOwnerSettings } from "@/server/settings";
 import { createSessionClient } from "@/server/supabase";
-import { deleteSet, logSet } from "./actions";
+import { deleteSet, logSet, logSetAs, logSetAsNew } from "./actions";
 
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 vi.mock("@/server/settings", () => ({ requireOwnerSettings: vi.fn() }));
@@ -109,6 +109,121 @@ describe("logSet", () => {
   it("checks the session before anything else", async () => {
     vi.mocked(requireOwnerSettings).mockRejectedValue(new Error("NEXT_REDIRECT"));
     await expect(logSet("bench 185 for 6")).rejects.toThrow("NEXT_REDIRECT");
+    expect(createSessionClient).not.toHaveBeenCalled();
+  });
+});
+
+const writes = (calls: unknown[][]) => calls.filter(([method]) => ["insert", "upsert"].includes(String(method)));
+
+describe("logSetAs", () => {
+  it("saves the spoken name as an alias of the picked exercise and logs the set to it", async () => {
+    const calls = fakeSupabase({
+      exercise_aliases: [ALIASES, { error: null }],
+      exercises: [{ data: { id: 9, is_bodyweight: false }, error: null }],
+      sets: [{ data: { id: 43 }, error: null }],
+    });
+
+    const result = await logSetAs("zercher squat 100 for 5", 9);
+
+    expect(result).toEqual({ kind: "added", setId: 43 });
+    expect(calls.slice(2)).toEqual([
+      ["from", "exercises"],
+      ["select", "id, is_bodyweight"],
+      ["eq", "id", 9],
+      ["maybeSingle"],
+      ["from", "exercise_aliases"],
+      ["upsert", [{ alias: "zercher squat", exercise_id: 9 }], { onConflict: "alias", ignoreDuplicates: true }],
+      ["from", "sets"],
+      [
+        "insert",
+        {
+          day: "2026-11-07",
+          exercise_id: 9,
+          load_value: 100,
+          load_unit: "lb",
+          reps: 5,
+          raw_input: "zercher squat 100 for 5",
+        },
+      ],
+      ["select", "id"],
+      ["single"],
+    ]);
+  });
+
+  it("logs a set said without a weight as bodyweight when the picked exercise is bodyweight", async () => {
+    const calls = fakeSupabase({
+      exercise_aliases: [ALIASES, { error: null }],
+      exercises: [{ data: { id: 2, is_bodyweight: true }, error: null }],
+      sets: [{ data: { id: 44 }, error: null }],
+    });
+
+    await logSetAs("dips 12 reps", 2);
+
+    expect(writes(calls).at(-1)).toEqual(["insert", expect.objectContaining({ exercise_id: 2, load_value: 0, reps: 12 })]);
+  });
+
+  it.each([
+    ["the exercise is gone", null, "zercher squat 100 for 5", /isn’t there/],
+    ["a weighted exercise gets a set without a weight", { id: 9, is_bodyweight: false }, "dips 12 reps", /needs a weight/],
+  ])("saves nothing when %s", async (_name, exercise, text, message) => {
+    const calls = fakeSupabase({ exercise_aliases: [ALIASES], exercises: [{ data: exercise, error: null }] });
+
+    expect(await logSetAs(text, 9)).toEqual({ kind: "error", message: expect.stringMatching(message) });
+    expect(writes(calls)).toEqual([]);
+  });
+});
+
+describe("logSetAsNew", () => {
+  it("creates the exercise, saves its name and the spoken name as aliases, and logs the set", async () => {
+    const calls = fakeSupabase({
+      exercise_aliases: [ALIASES, { error: null }],
+      exercises: [{ data: { id: 10 }, error: null }],
+      sets: [{ data: { id: 45 }, error: null }],
+    });
+
+    const result = await logSetAsNew("zercher squat 100 for 5", " Zercher front squat ", false);
+
+    expect(result).toEqual({ kind: "added", setId: 45 });
+    expect(writes(calls)).toEqual([
+      ["insert", { name: "Zercher front squat", is_bodyweight: false }],
+      [
+        "upsert",
+        [
+          { alias: "zercher front squat", exercise_id: 10 },
+          { alias: "zercher squat", exercise_id: 10 },
+        ],
+        { onConflict: "alias", ignoreDuplicates: true },
+      ],
+      ["insert", expect.objectContaining({ exercise_id: 10, load_value: 100, reps: 5 })],
+    ]);
+  });
+
+  it("explains a name that's already taken and saves nothing else", async () => {
+    const calls = fakeSupabase({
+      exercise_aliases: [ALIASES],
+      exercises: [{ data: null, error: { code: "23505" } }],
+    });
+
+    const result = await logSetAsNew("zercher squat 100 for 5", "Squat", false);
+
+    expect(result).toEqual({ kind: "error", message: expect.stringMatching(/already have an exercise/) });
+    expect(writes(calls)).toEqual([["insert", { name: "Squat", is_bodyweight: false }]]);
+  });
+
+  it("refuses a weighted exercise for a set said without a weight, before creating it", async () => {
+    const calls = fakeSupabase({ exercise_aliases: [ALIASES] });
+
+    const result = await logSetAsNew("dips 12 reps", "Dips", false);
+
+    expect(result).toEqual({ kind: "error", message: expect.stringMatching(/needs a weight/) });
+    expect(writes(calls)).toEqual([]);
+  });
+
+  it("rejects a blank name without touching the database", async () => {
+    expect(await logSetAsNew("zercher squat 100 for 5", "  ", false)).toEqual({
+      kind: "error",
+      message: expect.any(String),
+    });
     expect(createSessionClient).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { type AliasTarget, normalizeAlias, PARSE_ERROR, type ParseResult, parseSet } from "./parse-set";
+import {
+  type AliasTarget,
+  normalizeAlias,
+  PARSE_ERROR,
+  type ParseResult,
+  parseSet,
+  type SetReading,
+  setValues,
+} from "./parse-set";
 
 const BENCH = 1;
 const INCLINE = 2;
@@ -27,6 +35,10 @@ function set(exerciseId: number, loadValue: number, loadUnit: "lb" | "kg", reps:
 }
 
 const failed: ParseResult = { kind: "error", message: PARSE_ERROR };
+
+function unknown(spokenName: string, load: number | null, unit: "lb" | "kg", reps: number): ParseResult {
+  return { kind: "unknown", spokenName, reading: { load, unit, reps } };
+}
 
 describe("parseSet", () => {
   it.each([
@@ -100,20 +112,12 @@ describe("parseSet", () => {
     ]);
     expect(parseSet("bench press 185 for 6", overlapping, "lb")).toEqual(set(2, 185, "lb", 6));
     expect(parseSet("135 for 8 barbell row", overlapping, "lb")).toEqual(set(4, 135, "lb", 8));
-    expect(parseSet("db incline press 70 for 8", overlapping, "lb")).toEqual({
-      kind: "unknown",
-      spokenName: "db incline press",
-      loadGiven: true,
-    });
+    expect(parseSet("db incline press 70 for 8", overlapping, "lb")).toEqual(unknown("db incline press", 70, "lb", 8));
   });
 
   it("asks about an alias with extra exercise words instead of dropping them", () => {
     const withSquat = new Map([...aliases, ["squat", weighted(6)]]);
-    expect(parseSet("zercher squat 100 for 5", withSquat, "lb")).toEqual({
-      kind: "unknown",
-      spokenName: "zercher squat",
-      loadGiven: true,
-    });
+    expect(parseSet("zercher squat 100 for 5", withSquat, "lb")).toEqual(unknown("zercher squat", 100, "lb", 5));
     expect(parseSet("squat 100 for 5", withSquat, "lb")).toEqual(set(6, 100, "lb", 5));
   });
 
@@ -123,10 +127,10 @@ describe("parseSet", () => {
   });
 
   it.each([
-    ["zercher squat 100 kilos for 5", { kind: "unknown", spokenName: "zercher squat", loadGiven: true }],
-    ["dips 12 reps", { kind: "unknown", spokenName: "dips", loadGiven: false }],
-    ["I did hammer curls 30 for 10", { kind: "unknown", spokenName: "hammer curls", loadGiven: true }],
-    ["first set, landmine press 45 for 10", { kind: "unknown", spokenName: "landmine press", loadGiven: true }],
+    ["zercher squat 100 kilos for 5", unknown("zercher squat", 100, "kg", 5)],
+    ["dips 12 reps", unknown("dips", null, "lb", 12)],
+    ["I did hammer curls 30 for 10", unknown("hammer curls", 30, "lb", 10)],
+    ["first set, landmine press 45 for 10", unknown("landmine press", 45, "lb", 10)],
   ])("asks about the unknown exercise in %j", (text, expected) => {
     expect(parseSet(text, aliases, "lb")).toEqual(expected);
   });
@@ -143,6 +147,19 @@ describe("parseSet", () => {
     ["", "nothing"],
   ])("rejects %j (%s)", (text) => {
     expect(parseSet(text, aliases, "lb")).toEqual(failed);
+  });
+});
+
+describe("setValues", () => {
+  const noLoad: SetReading = { load: null, unit: "kg", reps: 12 };
+
+  it("treats a missing load as bodyweight only for a bodyweight exercise", () => {
+    expect(setValues(noLoad, true)).toEqual({ loadValue: 0, loadUnit: "kg", reps: 12 });
+    expect(setValues(noLoad, false)).toBeNull();
+  });
+
+  it("keeps the load and unit that were said", () => {
+    expect(setValues({ load: 45, unit: "lb", reps: 6 }, true)).toEqual({ loadValue: 45, loadUnit: "lb", reps: 6 });
   });
 });
 
