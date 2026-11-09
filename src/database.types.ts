@@ -173,7 +173,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "to_kg":
+            "merge_exercises":
+{ Args: { "source_id": number,"target_id": number }; Returns: undefined
+                           },
+"to_kg":
 { Args: { "unit": Database["public"]['Enums']["weight_unit"],"value": number }; Returns: number
                            },
 "training_day":
