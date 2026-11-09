@@ -2,6 +2,7 @@
   "name": "gym-tracker",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "engines": {
     "node": "24.x"
   },
@@ -13,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:db": "vitest run --config vitest.db.config.mts",
-    "db:types": "supabase gen types --lang typescript > src/database.types.ts"
+    "db:types": "supabase gen types --lang typescript > src/database.types.ts",
+    "seed": "node scripts/seed.mts"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
