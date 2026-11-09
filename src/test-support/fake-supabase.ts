@@ -2,7 +2,7 @@ export type FakeResult = { data?: unknown; error?: unknown };
 
 const CHAIN_METHODS = [
   ...["select", "insert", "upsert", "update", "delete"],
-  ...["eq", "neq", "in", "order", "single", "maybeSingle"],
+  ...["eq", "neq", "in", "gte", "lte", "order", "range", "single", "maybeSingle"],
 ];
 
 // Records every call; each awaited query or rpc takes the next queued result for its table (or "rpc:name").

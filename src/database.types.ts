@@ -170,7 +170,15 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "trained_days": {
+                  Row: {
+                    "day": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                }
           }
           Functions: {
             "merge_exercises":
