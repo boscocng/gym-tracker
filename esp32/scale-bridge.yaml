@@ -48,9 +48,6 @@ sensor:
   - platform: xiaomi_body_scale
     mac_address: !secret scale_mac
     bindkey: !secret scale_bindkey
-    profile_id:
-      name: "Scale Profile"
-      id: scale_profile
     weight:
       name: "Scale Weight"
       id: scale_weight
@@ -66,9 +63,6 @@ sensor:
                 X-Scale-Token: !secret ingest_token
               json: |-
                 root["weight_kg"] = id(scale_weight).state;
-                if (id(scale_profile).has_state()) {
-                  root["profile_id"] = (int) id(scale_profile).state;
-                }
               on_response:
                 then:
                   - logger.log:
