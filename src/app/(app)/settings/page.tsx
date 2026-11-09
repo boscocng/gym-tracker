@@ -1,8 +1,9 @@
-import Link from "next/link";
+import { BackHeader } from "@/components/back-header";
 import { Constants } from "@/database.types";
 import { formatHour } from "@/rules/format";
 import { requireOwnerSettings } from "@/server/settings";
 import { signOut, updateRestRule, updateRolloverHour, updateTimeZone, updateUnit } from "./actions";
+import { ExerciseList } from "./exercise-list";
 import { ScaleStatus } from "./scale-status";
 import { SelectRow } from "./select-row";
 
@@ -23,28 +24,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="flex items-center gap-3 px-4 pt-safe pb-3.5">
-        <Link
-          href="/"
-          aria-label="Back to home"
-          className="flex size-11 flex-none items-center justify-center rounded-icon border border-border bg-surface"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="m15 5-7 7 7 7" />
-          </svg>
-        </Link>
-        <h1 className="font-condensed text-[32px] leading-none font-bold">Settings</h1>
-      </header>
+      <BackHeader href="/" label="Back to home" title="Settings" />
 
       <main className="flex flex-col gap-[22px] px-4 pt-1 pb-6">
         <section className="flex flex-col gap-2">
@@ -97,6 +77,8 @@ export default async function SettingsPage() {
             <ScaleStatus settings={settings} />
           </div>
         </section>
+
+        <ExerciseList />
 
         <form action={signOut} className="overflow-hidden rounded-card border border-border bg-surface">
           <button type="submit" className="flex min-h-[52px] w-full items-center px-4 text-base font-semibold text-accent">

@@ -26,6 +26,8 @@ export async function createSessionClient() {
   );
 }
 
+export type SessionClient = Awaited<ReturnType<typeof createSessionClient>>;
+
 export function createSecretClient() {
   return createClient<Database>(requireEnv("NEXT_PUBLIC_SUPABASE_URL"), requireEnv("SUPABASE_SECRET_KEY"), {
     auth: { persistSession: false, autoRefreshToken: false },

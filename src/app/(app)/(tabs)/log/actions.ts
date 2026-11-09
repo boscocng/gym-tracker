@@ -4,7 +4,6 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import {
   type AliasTarget,
-  normalizeAlias,
   PARSE_ERROR,
   type ParsedSet,
   type ParseResult,
@@ -12,18 +11,17 @@ import {
   setValues,
 } from "@/rules/parse-set";
 import { trainingDay } from "@/rules/training-day";
+import { addAliases, insertExercise } from "@/server/exercises";
 import { requireOwnerSettings } from "@/server/settings";
-import { createSessionClient } from "@/server/supabase";
+import { createSessionClient, type SessionClient } from "@/server/supabase";
 
 export type LogResult =
   | { kind: "added"; setId: number }
   | { kind: "unknown"; spokenName: string; loadGiven: boolean }
   | { kind: "error"; message: string };
 
-type Session = Awaited<ReturnType<typeof createSessionClient>>;
 type Settings = Awaited<ReturnType<typeof requireOwnerSettings>>;
 
-const UNIQUE_VIOLATION = "23505";
 const EXERCISE_GONE = "That exercise isn’t there any more. Pick another one.";
 const NAME_TAKEN = "You already have an exercise with that name. Pick it from the list or choose another name.";
 const NEEDS_WEIGHT = "That exercise needs a weight. Close this and say the set again with the weight.";
@@ -46,7 +44,7 @@ const repsText = z
   .transform(Number)
   .pipe(z.number().int().min(1).max(999));
 
-async function readAliases(supabase: Session): Promise<Map<string, AliasTarget>> {
+async function readAliases(supabase: SessionClient): Promise<Map<string, AliasTarget>> {
   const { data, error } = await supabase
     .from("exercise_aliases")
     .select("alias, exercise_id, exercises(is_bodyweight)");
@@ -58,15 +56,12 @@ async function readAliases(supabase: Session): Promise<Map<string, AliasTarget>>
   );
 }
 
-async function addAliases(supabase: Session, exerciseId: number, aliases: readonly string[]) {
-  const rows = [...new Set(aliases.filter(Boolean))].map((alias) => ({ alias, exercise_id: exerciseId }));
-  const { error } = await supabase.from("exercise_aliases").upsert(rows, { onConflict: "alias", ignoreDuplicates: true });
-  if (error) {
-    throw error;
-  }
-}
-
-async function insertSet(supabase: Session, settings: Settings, text: string, set: ParsedSet): Promise<LogResult> {
+async function insertSet(
+  supabase: SessionClient,
+  settings: Settings,
+  text: string,
+  set: ParsedSet,
+): Promise<LogResult> {
   const { data, error } = await supabase
     .from("sets")
     .insert({
@@ -86,7 +81,12 @@ async function insertSet(supabase: Session, settings: Settings, text: string, se
   return { kind: "added", setId: data.id };
 }
 
-async function store(supabase: Session, settings: Settings, text: string, result: ParseResult): Promise<LogResult> {
+async function store(
+  supabase: SessionClient,
+  settings: Settings,
+  text: string,
+  result: ParseResult,
+): Promise<LogResult> {
   if (result.kind === "error") {
     return result;
   }
@@ -160,19 +160,11 @@ export async function logSetAsNew(text: string, name: string, isBodyweight: bool
     return { kind: "error", message: NEEDS_WEIGHT };
   }
 
-  const { data: exercise, error } = await supabase
-    .from("exercises")
-    .insert({ name: newName.data, is_bodyweight: bodyweight.data })
-    .select("id")
-    .single();
-  if (error?.code === UNIQUE_VIOLATION) {
+  const exerciseId = await insertExercise(supabase, newName.data, bodyweight.data, [result.spokenName]);
+  if (exerciseId === null) {
     return { kind: "error", message: NAME_TAKEN };
   }
-  if (error) {
-    throw error;
-  }
-  await addAliases(supabase, exercise.id, [normalizeAlias(newName.data), result.spokenName]);
-  return insertSet(supabase, settings, input.data, { exerciseId: exercise.id, ...values });
+  return insertSet(supabase, settings, input.data, { exerciseId, ...values });
 }
 
 export async function deleteSet(id: number): Promise<void> {

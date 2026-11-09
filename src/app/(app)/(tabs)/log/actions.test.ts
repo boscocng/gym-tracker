@@ -2,18 +2,17 @@ import { refresh } from "next/cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PARSE_ERROR } from "@/rules/parse-set";
 import { requireOwnerSettings } from "@/server/settings";
-import { createSessionClient } from "@/server/supabase";
+import { createSessionClient, type SessionClient } from "@/server/supabase";
+import { type FakeResult, fakeSupabase as fake } from "@/test-support/fake-supabase";
 import { deleteSet, logSet, logSetAs, logSetAsNew, updateSet } from "./actions";
 
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 vi.mock("@/server/settings", () => ({ requireOwnerSettings: vi.fn() }));
 vi.mock("@/server/supabase", () => ({ createSessionClient: vi.fn() }));
 
-type Result = { data?: unknown; error?: unknown };
-type Session = Awaited<ReturnType<typeof createSessionClient>>;
 
 const NOW = new Date("2026-11-08T07:30:00Z");
-const ALIASES: Result = {
+const ALIASES: FakeResult = {
   data: [
     { alias: "bench", exercise_id: 1, exercises: { is_bodyweight: false } },
     { alias: "pull ups", exercise_id: 2, exercises: { is_bodyweight: true } },
@@ -21,25 +20,9 @@ const ALIASES: Result = {
   error: null,
 };
 
-function fakeSupabase(results: Record<string, Result[]>) {
-  const calls: unknown[][] = [];
-  const client = {
-    from(table: string) {
-      calls.push(["from", table]);
-      const chain: Record<string, unknown> = {
-        then: (resolve: (value: Result) => unknown, reject: (reason: unknown) => unknown) =>
-          Promise.resolve(results[table]?.shift() ?? { data: null, error: null }).then(resolve, reject),
-      };
-      for (const method of ["select", "insert", "upsert", "update", "delete", "eq", "single", "maybeSingle"]) {
-        chain[method] = (...args: unknown[]) => {
-          calls.push([method, ...args]);
-          return chain;
-        };
-      }
-      return chain;
-    },
-  };
-  vi.mocked(createSessionClient).mockResolvedValue(client as unknown as Session);
+function fakeSupabase(results: Record<string, FakeResult[]>) {
+  const { client, calls } = fake(results);
+  vi.mocked(createSessionClient).mockResolvedValue(client as unknown as SessionClient);
   return calls;
 }
 
@@ -159,12 +142,20 @@ describe("logSetAs", () => {
 
     await logSetAs("dips 12 reps", 2);
 
-    expect(writes(calls).at(-1)).toEqual(["insert", expect.objectContaining({ exercise_id: 2, load_value: 0, reps: 12 })]);
+    expect(writes(calls).at(-1)).toEqual([
+      "insert",
+      expect.objectContaining({ exercise_id: 2, load_value: 0, reps: 12 }),
+    ]);
   });
 
   it.each([
     ["the exercise is gone", null, "zercher squat 100 for 5", /isn’t there/],
-    ["a weighted exercise gets a set without a weight", { id: 9, is_bodyweight: false }, "dips 12 reps", /needs a weight/],
+    [
+      "a weighted exercise gets a set without a weight",
+      { id: 9, is_bodyweight: false },
+      "dips 12 reps",
+      /needs a weight/,
+    ],
   ])("saves nothing when %s", async (_name, exercise, text, message) => {
     const calls = fakeSupabase({ exercise_aliases: [ALIASES], exercises: [{ data: exercise, error: null }] });
 
