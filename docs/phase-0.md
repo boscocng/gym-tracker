@@ -53,7 +53,7 @@ Checked on 2026-11-08. `SPEC.md` section 11 asks Phase 0 for three things: curre
 13. **ESP32: `profile_id` lagged one reading, so the bridge no longer sends it.** In ESPHome 2026.10.2, `xiaomi_body_scale.cpp` publishes the weight (line 129) before the profile ID (line 135).
     - `on_value` therefore built the JSON while `scale_profile` still held the previous reading's profile. The first post after boot had no `profile_id`, and every later post carried the previous reading's profile.
     - No rule in the spec uses it, so `scale-bridge.yaml` no longer reads it, posts carry only `weight_kg`, and the schema in section 4 has no column for it.
-    - The spec still lists it in section 5 (`weigh_ins`) and section 7 (the request body).
+    - Sections 5 and 7 of the spec no longer mention it (section 6, row 12).
 14. **Design gaps.**
     - The Settings design has no rows for time zone, rest rule or sign-out, though the spec lists all three.
     - The Day design shows a workout label ("Trained · Pull") and "+0.9 vs last week", and the spec defines neither.
@@ -115,10 +115,7 @@ Added because the ESPHome component is new and the scale could still be returned
 - **Not tested:** a failed post, updating the board over Wi-Fi, and running for days without a restart.
 - **Next.** When Phase 1's `/api/scale` is live, put its URL and a new token in `secrets.yaml` and update the board over Wi-Fi. Delete the spike project only after that, so the board never posts to an address the project no longer owns.
 
-Setup notes worth adding to `esp32/README.md`:
-- `pipx install esphome` failed under Homebrew's Python 3.15 while building `ruamel.yaml.clib`. Pointing pipx at a Python 3.14 interpreter (`--python /path/to/python3.14`) worked.
-- The build sets up ESP-IDF's Python packages with `uv` if one is on the PATH. A mise `uv` shim with no version selected is on the PATH but fails; selecting a version (this test used `MISE_UV_VERSION=0.12.7`) fixes it.
-- macOS asks whether to allow a newly connected accessory, and the board's serial port only appears after you allow it.
+Three setup problems came up: ESPHome failing to install on Python 3.15, mise's `uv` shim, and the macOS prompt to allow the board. `esp32/README.md` now covers all three.
 
 ## 4. Proposed schema
 
@@ -345,9 +342,11 @@ Notes:
 - `npm test` runs the unit tests. `npm run test:db` runs the same `training_day` cases against the local Supabase stack through an RPC call, so it needs no extra database client.
 - `.gitignore` ignores every directory named `photos/`, so no code folder may use that name.
 
-## 6. Decisions for you
+## 6. Decisions
 
-| # | Question | My recommendation |
+All accepted as recommended on 2026-11-09.
+
+| # | Question | Decision |
 |---|---|---|
 | 1 | MCP auth if your account has no Request headers | A minimal OAuth flow in the app (option 1 in section 2). Decide in Phase 6. |
 | 2 | Day screen's "Trained · Pull" label: the spec has no workout type | Drop it for now. |
@@ -360,3 +359,5 @@ Notes:
 | 9 | Creating the owner | Sign-ups never on. Create the owner in the Supabase dashboard (or the seed script locally). |
 | 10 | Dependencies the spec doesn't name | `eslint` and `eslint-config-next` (CLAUDE.md requires lint), `@supabase/supabase-js` (needed by `@supabase/ssr`), `supabase` as a dev dependency to pin the CLI version, and in Phase 6 `@modelcontextprotocol/server` with `mcp-handler`. |
 | 11 | Supabase client in the browser | Don't use one. Keep Supabase calls in server components, server actions and route handlers, so only the server writes the session cookies and iOS's 7-day cap on JavaScript-written cookies never applies. Photo uploads can go through the server or a signed upload URL. |
+| 12 | The spec still lists `profile_id` (sections 5 and 7) | Remove it. Done. |
+| 13 | Setup problems from the scale test | Add them to `esp32/README.md`. Done. |
