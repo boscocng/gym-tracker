@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatWeight, weightIn } from "./units";
+import { formatLoad, formatWeight, weightIn } from "./units";
 
 describe("weightIn", () => {
   it("shows the entered value when the units match", () => {
@@ -19,5 +19,13 @@ describe("formatWeight", () => {
   it("always shows one decimal", () => {
     expect(formatWeight(80)).toBe("80.0");
     expect(formatWeight(176.6)).toBe("176.6");
+  });
+});
+
+describe("formatLoad", () => {
+  it("drops the decimal for whole loads", () => {
+    expect(formatLoad(185)).toBe("185");
+    expect(formatLoad(220.5)).toBe("220.5");
+    expect(formatLoad(0)).toBe("0");
   });
 });

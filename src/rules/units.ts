@@ -18,3 +18,7 @@ export function weightIn(unit: WeightUnit, reading: { value: number; unit: Weigh
 export function formatWeight(amount: number): string {
   return amount.toFixed(1);
 }
+
+export function formatLoad(amount: number): string {
+  return Number.isInteger(amount) ? String(amount) : amount.toFixed(1);
+}
