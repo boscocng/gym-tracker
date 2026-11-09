@@ -1,14 +1,21 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { type ComponentProps, useState, useTransition } from "react";
+import { SAVE_FAILED } from "@/components/messages";
 import { deleteSet, type LogResult, logSet, logSetAs, logSetAsNew } from "./actions";
 import { type EditableSet, EditSetSheet } from "./edit-set-sheet";
 import { LogDock } from "./log-dock";
-import { SAVE_FAILED } from "./messages";
+import { NotTraining } from "./not-training";
 import { type LogGroup, SetList } from "./set-list";
 import { type ExerciseOption, UnknownExerciseSheet } from "./unknown-exercise";
 
-type Props = { dayLabel: string; summary: string; groups: LogGroup[]; exercises: ExerciseOption[] };
+type Props = {
+  dayLabel: string;
+  summary: string;
+  groups: LogGroup[];
+  exercises: ExerciseOption[];
+  notTraining?: ComponentProps<typeof NotTraining>;
+};
 type Unknown = { text: string; spokenName: string; loadGiven: boolean };
 
 function lastAdded(groups: readonly LogGroup[], id: number | null): string | null {
@@ -75,7 +82,7 @@ function useSetLog() {
   return { draft, lastId, message, unknown, sheetError, pending, run, remove, changeDraft, setUnknown };
 }
 
-export function LogScreen({ dayLabel, summary, groups, exercises }: Props) {
+export function LogScreen({ dayLabel, summary, groups, exercises, notTraining }: Props) {
   const log = useSetLog();
   const [editing, setEditing] = useState<EditableSet | null>(null);
   const { draft, lastId, unknown } = log;
@@ -84,6 +91,7 @@ export function LogScreen({ dayLabel, summary, groups, exercises }: Props) {
     <div className="flex min-h-[calc(100dvh_-_var(--tab-bar-height))] flex-col">
       <LogHeader dayLabel={dayLabel} summary={summary} />
       <SetList groups={groups} lastId={lastId} disabled={log.pending} onEdit={setEditing} onDelete={log.remove} />
+      {groups.length === 0 && notTraining && <NotTraining {...notTraining} />}
       <LogDock
         draft={draft}
         lastText={lastAdded(groups, lastId)}

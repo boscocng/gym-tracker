@@ -1,7 +1,10 @@
+import { restCheck } from "@/rules/day-status";
+import { addDays } from "@/rules/days";
 import { formatDayLabel } from "@/rules/format";
 import { groupByExercise, loadLabel, logSummary } from "@/rules/sets";
 import { trainingDay } from "@/rules/training-day";
 import { weightIn } from "@/rules/units";
+import { readDayHistory } from "@/server/days";
 import { requireOwnerSettings } from "@/server/settings";
 import { createSessionClient } from "@/server/supabase";
 import { LogScreen } from "./log-screen";
@@ -29,6 +32,15 @@ export default async function LogPage() {
   if (exercisesError) {
     throw exercisesError;
   }
+  const { data: mark, error: markError } = await supabase
+    .from("day_marks")
+    .select("kind, reason")
+    .eq("day", today)
+    .maybeSingle();
+  if (markError) {
+    throw markError;
+  }
+  const history = await readDayHistory(supabase, settings.start_date, addDays(today, -7), today);
 
   const groups: LogGroup[] = groupByExercise(sets.map((set) => ({ ...set, exerciseId: set.exercise_id }))).map(
     (group) => {
@@ -59,6 +71,7 @@ export default async function LogPage() {
       summary={logSummary(sets.length, groups.length)}
       groups={groups}
       exercises={exercises}
+      notTraining={{ day: today, rest: restCheck(today, today, settings.rest_rule, history), mark }}
     />
   );
 }

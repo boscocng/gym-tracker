@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { daysBetween } from "./days";
-import { formatClock, formatDayLabel, formatHour, formatRelativeDay, formatShortDate } from "./format";
+import {
+  formatClock,
+  formatDayLabel,
+  formatHour,
+  formatRelativeDay,
+  formatShortDate,
+  formatWeekday,
+  formatWeekdayLetter,
+} from "./format";
 
 describe("formatClock", () => {
   it("shows the time in the owner's time zone, in lowercase", () => {
@@ -23,6 +31,8 @@ describe("day labels", () => {
   it("formats a training day without shifting it by time zone", () => {
     expect(formatDayLabel("2026-11-01")).toBe("Sunday · Nov 1");
     expect(formatShortDate("2026-12-31")).toBe("Dec 31");
+    expect(formatWeekday("2026-11-01")).toBe("Sunday");
+    expect(formatWeekdayLetter("2026-11-02")).toBe("M");
   });
 
   it("names today and yesterday", () => {

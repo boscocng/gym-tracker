@@ -2,8 +2,8 @@
 
 import { type FormEvent, useState, useTransition } from "react";
 import { Sheet } from "@/components/sheet";
+import { SAVE_FAILED } from "@/components/messages";
 import { updateSet } from "./actions";
-import { SAVE_FAILED } from "./messages";
 
 export type EditableSet = {
   id: number;

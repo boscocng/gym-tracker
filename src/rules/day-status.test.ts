@@ -3,6 +3,7 @@ import {
   type DayHistory,
   dayStatus,
   ordinal,
+  restCheck,
   restIsFree,
   restWindow,
   skipCountWith,
@@ -95,6 +96,20 @@ describe("restIsFree", () => {
   it("ignores sets dated before the start date", () => {
     const early = history(["2026-10-30", "2026-10-31", ...run(START, 4)]);
     expect(trainedBefore("2026-11-05", 7, early)).toBe(4);
+  });
+
+  it("summarizes rest for the sheet with the 7 days before", () => {
+    const check = restCheck("2026-11-09", "2026-11-09", "strict", history(run("2026-11-03", 6), [], "2026-11-03"));
+    expect(check).toMatchObject({ free: true, trained: 6, days: 6, needed: 6 });
+    expect(check.strip.map(({ day, status }) => `${day.slice(8)} ${status}`)).toEqual([
+      "02 null",
+      "03 trained",
+      "04 trained",
+      "05 trained",
+      "06 trained",
+      "07 trained",
+      "08 trained",
+    ]);
   });
 
   it("describes each rule's window", () => {

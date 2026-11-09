@@ -2,9 +2,9 @@
 
 import { type ReactNode, useEffect, useId, useRef } from "react";
 
-type Props = { open: boolean; title: string; onClose: () => void; children: ReactNode };
+type Props = { open: boolean; title: string; eyebrow?: string; onClose: () => void; children: ReactNode };
 
-export function Sheet({ open, title, onClose, children }: Props) {
+export function Sheet({ open, title, eyebrow, onClose, children }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -32,9 +32,12 @@ export function Sheet({ open, title, onClose, children }: Props) {
     >
       <div className="flex flex-col gap-4 px-4 pt-5 pb-[max(env(safe-area-inset-bottom),16px)]">
         <div className="flex items-start justify-between gap-3">
-          <h2 id={titleId} className="pt-2 font-condensed text-2xl leading-tight font-bold">
-            {title}
-          </h2>
+          <div className="flex flex-col gap-2 pt-2">
+            {eyebrow && <span className="caps-label text-[13px] text-accent">{eyebrow}</span>}
+            <h2 id={titleId} className="font-condensed text-2xl leading-tight font-bold">
+              {title}
+            </h2>
+          </div>
           <button
             type="button"
             onClick={onClose}

@@ -62,6 +62,20 @@ export function restIsFree(day: string, rule: Enums<"rest_rule">, history: DayHi
   return trainedBefore(day, days, history) >= needed;
 }
 
+export type StripDay = { day: string; status: DayStatus | null };
+
+export type RestCheck = { free: boolean; trained: number; days: number; needed: number; strip: StripDay[] };
+
+// Whether rest is free on `day`, with the 7 days before it, for the rest sheet and the skip flow.
+export function restCheck(day: string, today: string, rule: Enums<"rest_rule">, history: DayHistory): RestCheck {
+  const { days, needed } = REST_WINDOWS[rule];
+  const strip = Array.from({ length: 7 }, (_, index) => {
+    const earlier = addDays(day, index - 7);
+    return { day: earlier, status: dayStatus(earlier, today, history) };
+  });
+  return { free: restIsFree(day, rule, history), trained: trainedBefore(day, days, history), days, needed, strip };
+}
+
 // Skips in the 30 days ending today, counting the days about to be skipped.
 export function skipCountWith(newDays: readonly string[], today: string, history: DayHistory): number {
   const from = addDays(today, 1 - SKIP_WINDOW_DAYS);
