@@ -1,5 +1,5 @@
 import type { Enums } from "@/database.types";
-import { daysBetween } from "./days";
+import { addDays, daysBetween } from "./days";
 
 type WeighInFlag = Enums<"weigh_in_flag">;
 
@@ -58,6 +58,34 @@ export function dayWeight<Reading extends DayReading>(readings: readonly Reading
       (first, reading) => (first === null || reading.measuredAt < first.measuredAt ? reading : first),
       null,
     );
+}
+
+export function dailyWeights<Reading extends DayReading & { day: string }>(
+  readings: readonly Reading[],
+): Map<string, Reading> {
+  const byDay = Map.groupBy(readings, (reading) => reading.day);
+  const weights = new Map<string, Reading>();
+  for (const [day, dayReadings] of byDay) {
+    const weight = dayWeight(dayReadings);
+    if (weight) {
+      weights.set(day, weight);
+    }
+  }
+  return weights;
+}
+
+// The 7 calendar days ending on `day`, averaging the days that have a weight.
+export function sevenDayAverageKg(day: string, dailyKg: ReadonlyMap<string, number>): number | null {
+  const values = Array.from({ length: 7 }, (_, offset) => dailyKg.get(addDays(day, -offset))).filter(
+    (kg) => kg !== undefined,
+  );
+  return values.length === 0 ? null : values.reduce((sum, kg) => sum + kg, 0) / values.length;
+}
+
+export function weekChangeKg(day: string, dailyKg: ReadonlyMap<string, number>): number | null {
+  const current = sevenDayAverageKg(day, dailyKg);
+  const previous = sevenDayAverageKg(addDays(day, -7), dailyKg);
+  return current === null || previous === null ? null : current - previous;
 }
 
 export function isScaleStale(lastReadingDay: string | null, today: string): boolean {

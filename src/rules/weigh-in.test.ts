@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { classifyReading, dayWeight, isScaleStale, type DayReading, type PriorReading } from "./weigh-in";
+import {
+  classifyReading,
+  dailyWeights,
+  dayWeight,
+  isScaleStale,
+  sevenDayAverageKg,
+  weekChangeKg,
+  type DayReading,
+  type PriorReading,
+} from "./weigh-in";
 
 const at = new Date("2026-11-08T12:00:00Z");
 const minutesBefore = (minutes: number) => new Date(at.getTime() - minutes * 60_000);
@@ -103,5 +112,39 @@ describe("isScaleStale", () => {
 
   it("is stale after 2 days without a reading, across a month boundary", () => {
     expect(isScaleStale("2026-10-30", "2026-11-01")).toBe(true);
+  });
+});
+
+describe("dailyWeights", () => {
+  it("picks each day's weight with the day rules", () => {
+    const early = { ...reading(80.2, minutesBefore(30)), day: "2026-11-08" };
+    const late = { ...reading(80.4, minutesBefore(5)), day: "2026-11-08" };
+    const outlier = { ...reading(95, daysBefore(1), { flag: "outlier" }), day: "2026-11-07" };
+    const weights = dailyWeights([late, outlier, early]);
+    expect([...weights]).toEqual([["2026-11-08", early]]);
+  });
+});
+
+describe("seven-day average and weekly change", () => {
+  const daily = new Map([
+    ["2026-11-01", 80],
+    ["2026-11-03", 81],
+    ["2026-11-08", 79],
+    ["2026-11-09", 80],
+    ["2026-11-14", 81],
+  ]);
+
+  it("averages the 7 calendar days ending on the day, skipping days without a weight", () => {
+    expect(sevenDayAverageKg("2026-11-07", daily)).toBe(80.5);
+    expect(sevenDayAverageKg("2026-11-14", daily)).toBe(80);
+  });
+
+  it("has no average when the window has no weights", () => {
+    expect(sevenDayAverageKg("2026-10-31", daily)).toBeNull();
+  });
+
+  it("compares with the average from 7 days earlier", () => {
+    expect(weekChangeKg("2026-11-14", daily)).toBe(-0.5);
+    expect(weekChangeKg("2026-11-07", daily)).toBeNull();
   });
 });

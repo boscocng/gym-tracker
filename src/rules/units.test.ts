@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatLoad, formatWeight, weightIn } from "./units";
+import { formatChange, formatLoad, formatWeight, weightIn } from "./units";
 
 describe("weightIn", () => {
   it("shows the entered value when the units match", () => {
@@ -27,5 +27,16 @@ describe("formatLoad", () => {
     expect(formatLoad(185)).toBe("185");
     expect(formatLoad(220.5)).toBe("220.5");
     expect(formatLoad(0)).toBe("0");
+  });
+});
+
+describe("formatChange", () => {
+  it.each([
+    [0.94, "+0.9"],
+    [-0.5, "\u22120.5"],
+    [0.04, "0.0"],
+    [-0.04, "0.0"],
+  ])("writes %s as %s", (amount, expected) => {
+    expect(formatChange(amount)).toBe(expected);
   });
 });

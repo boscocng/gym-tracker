@@ -19,6 +19,14 @@ export function formatWeight(amount: number): string {
   return amount.toFixed(1);
 }
 
+export function formatChange(amount: number): string {
+  const text = Math.abs(amount).toFixed(1);
+  if (text === "0.0") {
+    return text;
+  }
+  return `${amount > 0 ? "+" : "\u2212"}${text}`;
+}
+
 export function formatLoad(amount: number): string {
   return Number.isInteger(amount) ? String(amount) : amount.toFixed(1);
 }
