@@ -15,6 +15,10 @@ export function weightIn(unit: WeightUnit, reading: { value: number; unit: Weigh
   return Math.round(amountIn(unit, reading) * 10) / 10;
 }
 
+export function fromKg(unit: WeightUnit, kg: number): number {
+  return weightIn(unit, { value: kg, unit: "kg", kg });
+}
+
 export function formatWeight(amount: number): string {
   return amount.toFixed(1);
 }

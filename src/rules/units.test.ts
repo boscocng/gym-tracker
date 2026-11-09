@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatChange, formatLoad, formatWeight, weightIn } from "./units";
+import { formatChange, formatLoad, formatWeight, fromKg, weightIn } from "./units";
 
 describe("weightIn", () => {
   it("shows the entered value when the units match", () => {
@@ -38,5 +38,13 @@ describe("formatChange", () => {
     [-0.04, "0.0"],
   ])("writes %s as %s", (amount, expected) => {
     expect(formatChange(amount)).toBe(expected);
+  });
+});
+
+describe("fromKg", () => {
+  it("shows a kilogram amount in the owner's unit, rounded to 0.1", () => {
+    expect(fromKg("lb", 77.111)).toBe(170);
+    expect(fromKg("kg", 77.111)).toBe(77.1);
+    expect(fromKg("lb", -0.5)).toBe(-1.1);
   });
 });
