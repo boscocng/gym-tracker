@@ -71,6 +71,22 @@ describe("logSet", () => {
     expect(refresh).toHaveBeenCalledOnce();
   });
 
+  it("stores the set on a past day when one is given", async () => {
+    const calls = fakeSupabase({ exercise_aliases: [ALIASES], sets: [{ data: { id: 50 }, error: null }] });
+
+    expect(await logSet("bench 185 for 6", "2026-11-05")).toEqual({ kind: "added", setId: 50 });
+    expect(calls).toContainEqual(["insert", expect.objectContaining({ day: "2026-11-05", exercise_id: 1 })]);
+  });
+
+  it.each([
+    ["after today's training day", "2026-11-08"],
+    ["before the start date", "2026-10-31"],
+    ["not a day", "11/05/2026"],
+  ])("refuses a day %s without touching the database", async (_name, day) => {
+    expect(await logSet("bench 185 for 6", day)).toEqual({ kind: "error", message: expect.any(String) });
+    expect(createSessionClient).not.toHaveBeenCalled();
+  });
+
   it("returns an unknown exercise without storing anything", async () => {
     const calls = fakeSupabase({ exercise_aliases: [ALIASES] });
 

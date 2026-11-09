@@ -26,7 +26,11 @@ function coverage(extraDays: readonly string[]): string {
   if (extraDays.length === 1) {
     return `Also covers ${formatWeekday(extraDays[0])}, ${formatShortDate(extraDays[0])}`;
   }
-  return `Also covers ${formatShortDate(extraDays[0])} to ${formatShortDate(extraDays.at(-1) ?? extraDays[0])}`;
+  if (extraDays.length > 3) {
+    return `Also covers the other ${extraDays.length} missed days`;
+  }
+  const dates = extraDays.map(formatShortDate);
+  return `Also covers ${dates.slice(0, -1).join(", ")} and ${dates.at(-1)}`;
 }
 
 function Header({ variant, day, backHref }: Pick<Props, "variant" | "day" | "backHref">) {

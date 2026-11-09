@@ -14,7 +14,9 @@ export const readOwnerSettings = cache(async () => {
   return data;
 });
 
-export async function requireOwnerSettings() {
+export type OwnerSettings = NonNullable<Awaited<ReturnType<typeof readOwnerSettings>>>;
+
+export async function requireOwnerSettings(): Promise<OwnerSettings> {
   const settings = await readOwnerSettings();
   if (!settings) {
     redirect("/login");
