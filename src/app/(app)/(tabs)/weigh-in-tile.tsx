@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useState, useTransition } from "react";
+import { CheckIcon } from "@/components/check-icon";
 import { SAVE_FAILED } from "@/components/messages";
 import { Sheet } from "@/components/sheet";
 import { saveManualWeight } from "./actions";
@@ -25,20 +26,7 @@ function WeighInContent({ weighIn, unit }: Props) {
     <>
       <span className="flex items-center justify-between">
         <span className="caps-label text-xs">Weigh-in</span>
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-          className="text-accent"
-        >
-          <path d="m5 12.5 4.5 4.5L19 7.5" />
-        </svg>
+        <CheckIcon />
       </span>
       <span className="font-condensed text-[30px] leading-none font-bold">
         {weighIn.value}

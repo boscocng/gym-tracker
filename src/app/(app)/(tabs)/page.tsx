@@ -1,25 +1,17 @@
 import Link from "next/link";
-import { formatClock, formatDayLabel } from "@/rules/format";
+import { formatDayLabel } from "@/rules/format";
 import { trainingDay } from "@/rules/training-day";
-import { formatWeight, weightIn } from "@/rules/units";
-import { dayWeight } from "@/rules/weigh-in";
 import { requireOwnerSettings } from "@/server/settings";
 import { createSessionClient } from "@/server/supabase";
+import { ConsistencyCard, StrengthCard, WeightCard } from "./home-cards";
+import { readHome } from "./read-home";
+import { PhotoTile, WorkoutTile } from "./today-tiles";
 import { WeighInTile } from "./weigh-in-tile";
 
 export default async function HomePage() {
   const settings = await requireOwnerSettings();
   const today = trainingDay(new Date(), settings.time_zone, settings.rollover_hour);
-
-  const supabase = await createSessionClient();
-  const { data: readings, error } = await supabase
-    .from("weigh_ins")
-    .select("measured_at, value, unit, kg, source, flag")
-    .eq("day", today);
-  if (error) {
-    throw error;
-  }
-  const weight = dayWeight(readings.map((reading) => ({ ...reading, measuredAt: new Date(reading.measured_at) })));
+  const home = await readHome(await createSessionClient(), settings, today);
 
   return (
     <main className="flex flex-col gap-5 px-4 pt-safe pb-5">
@@ -51,17 +43,17 @@ export default async function HomePage() {
       </header>
 
       <section aria-label="Today's checklist" className="grid grid-cols-3 gap-2">
-        <WeighInTile
-          weighIn={
-            weight && {
-              value: formatWeight(weightIn(settings.unit, weight)),
-              source: weight.source,
-              time: formatClock(weight.measuredAt, settings.time_zone),
-            }
-          }
-          unit={settings.unit}
-        />
+        <WeighInTile weighIn={home.weighIn} unit={settings.unit} />
+        <PhotoTile time={home.photoTime} />
+        <WorkoutTile {...home.workout} />
       </section>
+
+      <WeightCard trend={home.trend} unit={settings.unit} />
+
+      <div className="grid grid-cols-2 gap-3">
+        <StrengthCard strength={home.strength} />
+        <ConsistencyCard consistency={home.consistency} />
+      </div>
     </main>
   );
 }

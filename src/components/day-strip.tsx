@@ -22,16 +22,22 @@ function fill(status: DayStatus | null): string {
   return "bg-surface-2";
 }
 
-export function DayStrip({ days, size }: { days: readonly StripDay[]; size: "large" | "small" }) {
+const CELL_SIZES = { large: "h-10 rounded-[10px]", small: "h-7 rounded-lg", compact: "h-3.5 rounded-[4px]" };
+
+export function DayStrip({ days, size }: { days: readonly StripDay[]; size: keyof typeof CELL_SIZES }) {
   const label = days
     .map(({ day, status }) => `${formatWeekday(day)} ${status ? SPOKEN[status] : "not tracked"}`)
     .join(", ");
   return (
-    <div role="img" aria-label={`Last ${days.length} days: ${label}`} className="grid grid-cols-7 gap-1.5">
+    <div
+      role="img"
+      aria-label={`Last ${days.length} days: ${label}`}
+      className={`grid grid-cols-7 ${size === "compact" ? "gap-1" : "gap-1.5"}`}
+    >
       {days.map(({ day, status }) => (
         <span key={day} className="flex flex-col items-center gap-1.5">
           <span
-            className={`flex w-full items-center justify-center ${size === "large" ? "h-10 rounded-[10px]" : "h-7 rounded-lg"} ${fill(status)}`}
+            className={`flex w-full items-center justify-center ${CELL_SIZES[size]} ${fill(status)}`}
           >
             {size === "large" && status === "trained" && (
               <svg
