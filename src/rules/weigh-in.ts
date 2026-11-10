@@ -1,5 +1,6 @@
 import type { Enums } from "@/database.types";
 import { addDays, daysBetween } from "./days";
+import { KG_PER_LB } from "./units";
 
 type WeighInFlag = Enums<"weigh_in_flag">;
 
@@ -14,6 +15,9 @@ export type DayReading = PriorReading & {
   value: number;
   unit: Enums<"weight_unit">;
 };
+
+export const MIN_WEIGHT_KG = 20;
+export const MAX_WEIGHT_KG = 300;
 
 const MINUTE_MS = 60_000;
 const DUPLICATE_WINDOW_MS = 10 * MINUTE_MS;
@@ -90,4 +94,10 @@ export function weekChangeKg(day: string, dailyKg: ReadonlyMap<string, number>):
 
 export function isScaleStale(lastReadingDay: string | null, today: string): boolean {
   return lastReadingDay === null || daysBetween(lastReadingDay, today) >= SCALE_STALE_AFTER_DAYS;
+}
+
+// Rounded inward to 0.1, so every value in the range converts to 20 to 300 kg.
+export function weightRangeIn(unit: Enums<"weight_unit">): { min: number; max: number } {
+  const perKg = unit === "kg" ? 1 : 1 / KG_PER_LB;
+  return { min: Math.ceil(MIN_WEIGHT_KG * perKg * 10) / 10, max: Math.floor(MAX_WEIGHT_KG * perKg * 10) / 10 };
 }

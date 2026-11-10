@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { formatDayLabel } from "@/rules/format";
+import { formatClock, formatDayLabel } from "@/rules/format";
 import { trainingDay } from "@/rules/training-day";
+import { formatWeight, weightIn } from "@/rules/units";
 import { dayWeight } from "@/rules/weigh-in";
 import { requireOwnerSettings } from "@/server/settings";
 import { createSessionClient } from "@/server/supabase";
@@ -50,7 +51,16 @@ export default async function HomePage() {
       </header>
 
       <section aria-label="Today's checklist" className="grid grid-cols-3 gap-2">
-        <WeighInTile weight={weight} unit={settings.unit} timeZone={settings.time_zone} />
+        <WeighInTile
+          weighIn={
+            weight && {
+              value: formatWeight(weightIn(settings.unit, weight)),
+              source: weight.source,
+              time: formatClock(weight.measuredAt, settings.time_zone),
+            }
+          }
+          unit={settings.unit}
+        />
       </section>
     </main>
   );

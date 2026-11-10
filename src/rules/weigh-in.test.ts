@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { KG_PER_LB } from "./units";
 import {
   classifyReading,
   dailyWeights,
@@ -6,6 +7,7 @@ import {
   isScaleStale,
   sevenDayAverageKg,
   weekChangeKg,
+  weightRangeIn,
   type DayReading,
   type PriorReading,
 } from "./weigh-in";
@@ -148,3 +150,19 @@ describe("seven-day average and weekly change", () => {
     expect(weekChangeKg("2026-11-07", daily)).toBeNull();
   });
 });
+
+describe("weightRangeIn", () => {
+  it("keeps every accepted value within 20 to 300 kg", () => {
+    expect(weightRangeIn("kg")).toEqual({ min: 20, max: 300 });
+    const { min, max } = weightRangeIn("lb");
+    expect({ min, max }).toEqual({ min: 44.1, max: 661.3 });
+    expect(toKg(min)).toBeGreaterThanOrEqual(20);
+    expect(toKg(max)).toBeLessThanOrEqual(300);
+    expect(toKg(min - 0.1)).toBeLessThan(20);
+    expect(toKg(max + 0.1)).toBeGreaterThan(300);
+  });
+});
+
+function toKg(pounds: number): number {
+  return pounds * KG_PER_LB;
+}

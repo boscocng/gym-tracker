@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { trainingDay } from "@/rules/training-day";
-import { classifyReading, OUTLIER_WINDOW_MS } from "@/rules/weigh-in";
+import { classifyReading, MAX_WEIGHT_KG, MIN_WEIGHT_KG, OUTLIER_WINDOW_MS } from "@/rules/weigh-in";
 import { requireEnv } from "@/server/env";
 import { createSecretClient } from "@/server/supabase";
 import { tokenMatches } from "@/server/token";
 
 const MAX_BODY_BYTES = 1024;
 
-const scaleReading = z.object({ weight_kg: z.number().min(20).max(300) });
+const scaleReading = z.object({ weight_kg: z.number().min(MIN_WEIGHT_KG).max(MAX_WEIGHT_KG) });
 
 function fail(status: number, error: string) {
   return NextResponse.json({ error }, { status });
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   }
   const body = scaleReading.safeParse(await request.json().catch(() => null));
   if (!body.success) {
-    return fail(400, "expected {\"weight_kg\": number from 20 to 300}");
+    return fail(400, `expected {"weight_kg": number from ${MIN_WEIGHT_KG} to ${MAX_WEIGHT_KG}}`);
   }
 
   const supabase = createSecretClient();
