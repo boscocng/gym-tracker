@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Chip } from "@/components/chip";
 import { DayStrip } from "@/components/day-strip";
 import type { Enums } from "@/database.types";
 import type { Home } from "./read-home";
@@ -110,5 +112,36 @@ export function ConsistencyCard({ consistency }: { consistency: Home["consistenc
         </span>
       </div>
     </section>
+  );
+}
+
+export function AddonsCard({ addons }: { addons: Home["addons"] }) {
+  return (
+    <Link href="/addons" className={`${cardClass} gap-3`}>
+      <span className="flex items-center justify-between">
+        <span className="caps-label text-[13px]">Active add-ons</span>
+        <span className="flex items-center gap-0.5 text-[13px] text-text-2">
+          Manage
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m9 5 7 7-7 7" />
+          </svg>
+        </span>
+      </span>
+      <span className="flex flex-wrap gap-2">
+        {addons.map((addon) => (
+          <Chip key={addon.id} label={addon.name} note={`day ${addon.day}`} />
+        ))}
+      </span>
+    </Link>
   );
 }

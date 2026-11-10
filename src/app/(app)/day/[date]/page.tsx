@@ -3,7 +3,7 @@ import { isDay } from "@/rules/days";
 import { trainingDay } from "@/rules/training-day";
 import { requireOwnerSettings } from "@/server/settings";
 import { createSessionClient } from "@/server/supabase";
-import { DayHeader, DayPhoto, WeightCard, WorkoutCard } from "./day-cards";
+import { DayAddons, DayHeader, DayPhoto, WeightCard, WorkoutCard } from "./day-cards";
 import { readDay } from "./read-day";
 import { SkipReasonCard } from "./skip-reason-card";
 
@@ -28,6 +28,7 @@ export default async function DayPage({ params }: { params: Promise<{ date: stri
           <WorkoutCard exercises={day.exercises} setCount={day.setCount} unit={settings.unit} />
         )}
         {day.skipReason && <SkipReasonCard day={date} reason={day.skipReason} />}
+        {day.addons.length > 0 && <DayAddons addons={day.addons} />}
       </main>
     </div>
   );

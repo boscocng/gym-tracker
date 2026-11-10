@@ -3,7 +3,7 @@ import { formatDayLabel } from "@/rules/format";
 import { trainingDay } from "@/rules/training-day";
 import { requireOwnerSettings } from "@/server/settings";
 import { createSessionClient } from "@/server/supabase";
-import { ConsistencyCard, StrengthCard, WeightCard } from "./home-cards";
+import { AddonsCard, ConsistencyCard, StrengthCard, WeightCard } from "./home-cards";
 import { readHome } from "./read-home";
 import { PhotoTile, WorkoutTile } from "./today-tiles";
 import { WeighInTile } from "./weigh-in-tile";
@@ -54,6 +54,8 @@ export default async function HomePage() {
         <StrengthCard strength={home.strength} />
         <ConsistencyCard consistency={home.consistency} />
       </div>
+
+      {home.addons.length > 0 && <AddonsCard addons={home.addons} />}
     </main>
   );
 }

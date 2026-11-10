@@ -1,16 +1,18 @@
+import { activeOn } from "@/rules/addons";
 import { dayStatus } from "@/rules/day-status";
 import { addDays } from "@/rules/days";
 import { formatClock } from "@/rules/format";
 import { groupByExercise, loadLabel } from "@/rules/sets";
 import { formatChange, formatWeight, fromKg, weightIn } from "@/rules/units";
 import { dailyWeights, sevenDayAverageKg, weekChangeKg } from "@/rules/weigh-in";
+import { readAddons } from "@/server/addons";
 import { signPhotoUrls } from "@/server/photos";
 import type { OwnerSettings } from "@/server/settings";
 import type { SessionClient } from "@/server/supabase";
 
 // Everything the Day screen shows for one date, already formatted in the owner's unit.
 export async function readDay(supabase: SessionClient, settings: OwnerSettings, date: string, today: string) {
-  const [sets, mark, readings, photo] = await Promise.all([
+  const [sets, mark, readings, photo, addons] = await Promise.all([
     supabase
       .from("sets")
       .select("id, exercise_id, load_value, load_unit, load_kg, reps, exercises(name, is_bodyweight)")
@@ -24,6 +26,7 @@ export async function readDay(supabase: SessionClient, settings: OwnerSettings, 
       .gte("day", addDays(date, -13))
       .lte("day", date),
     supabase.from("photos").select("storage_path, taken_at").eq("day", date).maybeSingle(),
+    readAddons(supabase),
   ]);
   if (sets.error || mark.error || readings.error || photo.error) {
     throw sets.error ?? mark.error ?? readings.error ?? photo.error;
@@ -60,6 +63,7 @@ export async function readDay(supabase: SessionClient, settings: OwnerSettings, 
         ? { url: photoUrl, takenAt: formatClock(new Date(photo.data.taken_at), settings.time_zone) }
         : null,
     skipReason: mark.data?.kind === "skip" ? mark.data.reason : null,
+    addons: activeOn(addons, date),
     setCount: sets.data.length,
     exercises,
     weight: weight ? formatWeight(weightIn(settings.unit, weight)) : null,

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Chip } from "@/components/chip";
 import { StatusMark } from "@/components/status-mark";
 import type { DayStatus } from "@/rules/day-status";
 import { formatShortDate, formatWeekday } from "@/rules/format";
@@ -126,6 +127,21 @@ export function WorkoutCard({ exercises, setCount, unit }: WorkoutProps) {
           <span className="text-right font-condensed text-lg font-semibold">{exercise.line}</span>
         </div>
       ))}
+    </section>
+  );
+}
+
+export function DayAddons({ addons }: { addons: { id: number; name: string; details: string }[] }) {
+  return (
+    <section aria-labelledby="day-addons" className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4">
+      <h2 id="day-addons" className="caps-label text-[13px]">
+        Add-ons that day
+      </h2>
+      <div className="flex flex-wrap gap-2">
+        {addons.map((addon) => (
+          <Chip key={addon.id} label={addon.name} note={addon.details} />
+        ))}
+      </div>
     </section>
   );
 }
