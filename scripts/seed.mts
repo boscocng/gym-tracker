@@ -1,33 +1,102 @@
+import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "../src/database.types.ts";
-import { normalizeAlias } from "../src/rules/parse-set.ts";
-import { trainingDay } from "../src/rules/training-day.ts";
+import type { Database, TablesInsert } from "../src/database.types.ts";
+import { requireEnv } from "../src/server/env.ts";
+import { PHOTO_BUCKET } from "../src/server/photos.ts";
+import {
+  aliasesOf,
+  EXERCISES,
+  PHOTO_VARIANTS,
+  type PlannedAddon,
+  type PlannedPhoto,
+  type PlannedSet,
+  ROLLOVER_HOUR,
+  seedPlan,
+  TIME_ZONE,
+} from "./seed-plan.mts";
 
 const OWNER = { email: "owner@example.com", password: "local-only-password" };
-const TIME_ZONE = "UTC";
-const ROLLOVER_HOUR = 4;
-const DAYS = 14;
-const DAY_MS = 86_400_000;
-const FAKE_WEIGHTS_KG = [81.4, 81.2, 81.5, 81.0, 80.9, 81.1, 80.7, 80.8, 80.5, 80.6, 80.3, 80.4, 80.1, 80.0];
-const EXERCISES = [
-  { name: "Bench press", is_bodyweight: false, aliases: ["bench", "benchpress", "flat bench"] },
-  { name: "Squat", is_bodyweight: false, aliases: ["squats", "back squat"] },
-  { name: "Deadlift", is_bodyweight: false, aliases: ["deadlifts"] },
-  { name: "Overhead press", is_bodyweight: false, aliases: ["ohp", "shoulder press"] },
-  { name: "Barbell row", is_bodyweight: false, aliases: ["row", "rows"] },
-  { name: "Pull-up", is_bodyweight: true, aliases: ["pull ups", "pullups"] },
-];
 
 process.loadEnvFile(".env.local");
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const secretKey = process.env.SUPABASE_SECRET_KEY ?? "";
-
+const url = requireEnv("NEXT_PUBLIC_SUPABASE_URL");
 if (!["127.0.0.1", "localhost"].includes(new URL(url).hostname)) {
   console.error(`Refusing to seed ${url}: npm run seed only runs against the local Supabase stack.`);
   process.exit(1);
 }
+const supabase = createClient<Database>(url, requireEnv("SUPABASE_SECRET_KEY"), { auth: { persistSession: false } });
 
-const supabase = createClient<Database>(url, secretKey, { auth: { persistSession: false } });
+function check(result: { error: unknown }): void {
+  if (result.error) {
+    throw result.error;
+  }
+}
+
+function idOf(ids: ReadonlyMap<string, number>, name: string): number {
+  const id = ids.get(name);
+  if (id === undefined) {
+    throw new Error(`${name} wasn't created`);
+  }
+  return id;
+}
+
+async function insertExercises(): Promise<Map<string, number>> {
+  const { data, error } = await supabase
+    .from("exercises")
+    .insert(EXERCISES.map(({ name, isBodyweight }) => ({ name, is_bodyweight: isBodyweight })))
+    .select("id, name");
+  if (error) {
+    throw error;
+  }
+  const ids = new Map(data.map(({ id, name }) => [name, id]));
+  const aliases = EXERCISES.flatMap((exercise) =>
+    aliasesOf(exercise).map((alias) => ({ alias, exercise_id: idOf(ids, exercise.name) })),
+  );
+  check(await supabase.from("exercise_aliases").insert(aliases));
+  return ids;
+}
+
+async function insertSets(sets: readonly PlannedSet[], exerciseIds: ReadonlyMap<string, number>): Promise<void> {
+  const rows = sets.map(({ exercise, ...set }) => ({ ...set, exercise_id: idOf(exerciseIds, exercise) }));
+  check(await supabase.from("sets").insert(rows));
+}
+
+async function uploadPhotos(photos: readonly PlannedPhoto[]): Promise<void> {
+  const files = await Promise.all(
+    Array.from({ length: PHOTO_VARIANTS }, async (_, variant) => ({
+      photo: await readFile(new URL(`./seed-photos/placeholder-${variant + 1}.jpg`, import.meta.url)),
+      thumb: await readFile(new URL(`./seed-photos/placeholder-${variant + 1}-thumb.jpg`, import.meta.url)),
+    })),
+  );
+  const bucket = supabase.storage.from(PHOTO_BUCKET);
+  const rows: TablesInsert<"photos">[] = [];
+  for (const { day, variant, takenAt } of photos) {
+    const id = randomUUID();
+    const paths = { storage_path: `${day}/${id}.jpg`, thumb_path: `${day}/${id}-thumb.jpg` };
+    const uploads = await Promise.all([
+      bucket.upload(paths.storage_path, files[variant].photo, { contentType: "image/jpeg" }),
+      bucket.upload(paths.thumb_path, files[variant].thumb, { contentType: "image/jpeg" }),
+    ]);
+    uploads.forEach(check);
+    rows.push({ day, ...paths, taken_at: takenAt });
+  }
+  check(await supabase.from("photos").insert(rows));
+}
+
+async function insertAddons(addons: readonly PlannedAddon[]): Promise<void> {
+  const { data, error } = await supabase
+    .from("addons")
+    .insert(addons.map(({ name }) => ({ name })))
+    .select("id, name");
+  if (error) {
+    throw error;
+  }
+  const ids = new Map(data.map(({ id, name }) => [name, id]));
+  const periods = addons.flatMap(({ name, periods: planned }) =>
+    planned.map((period) => ({ ...period, addon_id: idOf(ids, name) })),
+  );
+  check(await supabase.from("addon_periods").insert(periods));
+}
 
 const { data: created, error: userError } = await supabase.auth.admin.createUser({
   email: OWNER.email,
@@ -39,50 +108,26 @@ if (userError) {
   process.exit(1);
 }
 
-const now = Date.now();
-const { error: settingsError } = await supabase.from("settings").insert({
-  owner_id: created.user.id,
-  unit: "lb",
-  time_zone: TIME_ZONE,
-  rollover_hour: ROLLOVER_HOUR,
-  start_date: trainingDay(new Date(now - (DAYS - 1) * DAY_MS), TIME_ZONE, ROLLOVER_HOUR),
-});
-if (settingsError) {
-  throw settingsError;
-}
+const plan = seedPlan(new Date());
+check(
+  await supabase.from("settings").insert({
+    owner_id: created.user.id,
+    unit: "lb",
+    time_zone: TIME_ZONE,
+    rollover_hour: ROLLOVER_HOUR,
+    start_date: plan.startDate,
+  }),
+);
+const exerciseIds = await insertExercises();
+check(await supabase.from("weigh_ins").insert(plan.weighIns));
+check(await supabase.from("day_marks").insert(plan.dayMarks));
+await insertSets(plan.sets, exerciseIds);
+await uploadPhotos(plan.photos);
+await insertAddons(plan.addons);
 
-const weighIns = FAKE_WEIGHTS_KG.map((kg, index) => {
-  const measuredAt = new Date(now - (DAYS - 1 - index) * DAY_MS - 30 * 60_000);
-  return {
-    measured_at: measuredAt.toISOString(),
-    day: trainingDay(measuredAt, TIME_ZONE, ROLLOVER_HOUR),
-    value: kg,
-    unit: "kg" as const,
-    source: "scale" as const,
-  };
-});
-const { error: weighInError } = await supabase.from("weigh_ins").insert(weighIns);
-if (weighInError) {
-  throw weighInError;
-}
-
-const { data: exercises, error: exerciseError } = await supabase
-  .from("exercises")
-  .insert(EXERCISES.map(({ name, is_bodyweight }) => ({ name, is_bodyweight })))
-  .select("id, name");
-if (exerciseError) {
-  throw exerciseError;
-}
-const aliases = EXERCISES.flatMap(({ name, aliases: spoken }) => {
-  const exerciseId = exercises.find((exercise) => exercise.name === name)?.id;
-  if (exerciseId === undefined) {
-    throw new Error(`Exercise ${name} wasn't created`);
-  }
-  return [normalizeAlias(name), ...spoken].map((alias) => ({ alias, exercise_id: exerciseId }));
-});
-const { error: aliasError } = await supabase.from("exercise_aliases").insert(aliases);
-if (aliasError) {
-  throw aliasError;
-}
-
-console.log(`Seeded ${OWNER.email} (password: ${OWNER.password}) with ${DAYS} days of fake weigh-ins and ${EXERCISES.length} exercises.`);
+const restDays = plan.dayMarks.filter((mark) => mark.kind === "rest").length;
+console.log(
+  `Seeded ${OWNER.email} (password: ${OWNER.password}) with fake data from ${plan.startDate} to ${plan.today}: ` +
+    `${plan.sets.length} sets, ${plan.weighIns.length} weigh-ins, ${restDays} rest days, ` +
+    `${plan.dayMarks.length - restDays} skips, ${plan.photos.length} photos and ${plan.addons.length} add-ons.`,
+);
