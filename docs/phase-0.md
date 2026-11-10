@@ -61,7 +61,7 @@ Checked on 2026-11-08. `SPEC.md` section 11 asks Phase 0 for three things: curre
 
 ## 3. The spike
 
-Live at **https://gym-tracker-spike.vercel.app**. The source is in `spike/`, deployed as its own Vercel project (`gym-tracker-spike`), which isn't connected to GitHub. Delete both after the tests, but only once the scale bridge posts to the real app (see the scale test below).
+A throwaway page in `spike/`, deployed as its own Vercel project that wasn't connected to GitHub. Both were deleted in Phase 7, after the scale bridge had moved to the real app. The source is in the git history.
 
 One page runs three tests, each with its own instructions:
 
