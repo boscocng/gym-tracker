@@ -11,3 +11,7 @@ export function addDays(day: string, amount: number): string {
 export function isDay(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && addDays(value, 0) === value;
 }
+
+export function dayRange(from: string, to: string): string[] {
+  return from > to ? [] : Array.from({ length: daysBetween(from, to) + 1 }, (_, index) => addDays(from, index));
+}

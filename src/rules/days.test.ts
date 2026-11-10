@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, daysBetween, isDay } from "./days";
+import { addDays, dayRange, daysBetween, isDay } from "./days";
 
 describe("days", () => {
   it.each([
@@ -20,5 +20,16 @@ describe("days", () => {
     ["", false],
   ])("accepts %j as a day: %s", (value, expected) => {
     expect(isDay(value)).toBe(expected);
+  });
+});
+
+describe("dayRange", () => {
+  it("lists every day from the first through the last", () => {
+    expect(dayRange("2026-10-30", "2026-11-02")).toEqual(["2026-10-30", "2026-10-31", "2026-11-01", "2026-11-02"]);
+    expect(dayRange("2026-11-02", "2026-11-02")).toEqual(["2026-11-02"]);
+  });
+
+  it("is empty when the range is backwards", () => {
+    expect(dayRange("2026-11-03", "2026-11-02")).toEqual([]);
   });
 });
