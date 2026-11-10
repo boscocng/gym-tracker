@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { StatusMark } from "@/components/status-mark";
-import { isMonth, monthGrid, monthName, shiftMonth } from "@/rules/calendar";
-import { type DayStatus, dayStatus } from "@/rules/day-status";
-import { addDays } from "@/rules/days";
+import { isMonth, monthName, shiftMonth } from "@/rules/calendar";
+import type { DayStatus } from "@/rules/day-status";
 import { trainingDay } from "@/rules/training-day";
-import { formatWeight, weightIn } from "@/rules/units";
-import { dailyWeights } from "@/rules/weigh-in";
-import { readDayHistory } from "@/server/days";
 import { requireOwnerSettings } from "@/server/settings";
 import { createSessionClient } from "@/server/supabase";
 import { CalendarCell } from "./calendar-cell";
+import { readMonth } from "./read-month";
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -66,38 +63,9 @@ export default async function CalendarPage({ searchParams }: Props) {
   const today = trainingDay(new Date(), settings.time_zone, settings.rollover_hour);
   const requested = (await searchParams).month;
   const month = typeof requested === "string" && isMonth(requested) ? requested : today.slice(0, 7);
-  const first = `${month}-01`;
-  const last = addDays(`${shiftMonth(month, 1)}-01`, -1);
-
-  const supabase = await createSessionClient();
-  const [history, readings] = await Promise.all([
-    readDayHistory(supabase, settings.start_date, first, last),
-    supabase
-      .from("weigh_ins")
-      .select("day, measured_at, value, unit, kg, source, flag")
-      .gte("day", first)
-      .lte("day", last),
-  ]);
-  if (readings.error) {
-    throw readings.error;
-  }
-  const weights = dailyWeights(
-    readings.data.map((reading) => ({ ...reading, measuredAt: new Date(reading.measured_at) })),
-  );
-
-  const cells = monthGrid(month).map(({ day, inMonth }) => {
-    const weight = weights.get(day);
-    return {
-      day,
-      inMonth,
-      status: inMonth ? dayStatus(day, today, history) : null,
-      tracked: inMonth && day >= settings.start_date && day <= today,
-      isToday: day === today,
-      weight: weight ? `${formatWeight(weightIn(settings.unit, weight))}` : null,
-    };
-  });
+  const cells = await readMonth(await createSessionClient(), settings, month, today);
   const count = (status: DayStatus) => cells.filter((cell) => cell.status === status).length;
-  const noPhoto = cells.filter((cell) => cell.tracked).length;
+  const noPhoto = cells.filter((cell) => cell.tracked && !cell.thumbUrl).length;
 
   return (
     <main className="flex flex-col gap-2 px-4 pt-safe pb-4">

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { StatusMark } from "@/components/status-mark";
 import type { DayStatus } from "@/rules/day-status";
@@ -10,12 +11,13 @@ type Props = {
   tracked: boolean;
   isToday: boolean;
   weight: string | null;
+  thumbUrl: string | null;
   unit: string;
 };
 
 const STATUS_WORDS: Partial<Record<DayStatus, string>> = { trained: "trained", rest: "rest", skipped: "skipped" };
 
-export function CalendarCell({ day, inMonth, status, tracked, isToday, weight, unit }: Props) {
+export function CalendarCell({ day, inMonth, status, tracked, isToday, weight, thumbUrl, unit }: Props) {
   const number = Number(day.slice(8));
   if (!inMonth) {
     return (
@@ -31,13 +33,21 @@ export function CalendarCell({ day, inMonth, status, tracked, isToday, weight, u
     formatShortDate(day),
     status && STATUS_WORDS[status],
     weight && `${weight} ${unit}`,
-    tracked && "no photo",
+    thumbUrl ? "photo" : tracked && "no photo",
   ]
     .filter(Boolean)
     .join(", ");
   const content = (
     <>
-      {tracked && <span aria-hidden="true" className="absolute inset-0 rounded-lg border border-dashed border-border-todo" />}
+      {thumbUrl && (
+        <>
+          <Image src={thumbUrl} alt="" fill unoptimized className="object-cover" />
+          <span aria-hidden="true" className="absolute inset-x-0 top-0 h-6 bg-linear-to-b from-bg/70 to-transparent" />
+        </>
+      )}
+      {tracked && !thumbUrl && (
+        <span aria-hidden="true" className="absolute inset-0 rounded-lg border border-dashed border-border-todo" />
+      )}
       <span className="absolute top-[5px] left-1.5 font-condensed text-[13px] leading-none font-semibold">{number}</span>
       <StatusMark status={status} className="absolute top-1.5 right-1.5" />
       {weight && (
