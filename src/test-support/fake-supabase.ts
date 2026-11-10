@@ -5,7 +5,10 @@ const CHAIN_METHODS = [
   ...["eq", "neq", "in", "gte", "lte", "order", "range", "single", "maybeSingle"],
 ];
 
-// Records every call; each awaited query or rpc takes the next queued result for its table (or "rpc:name").
+const STORAGE_METHODS = ["upload", "remove", "createSignedUrls"];
+
+// Records every call; each awaited query, rpc or storage call takes the next queued result for its
+// table (or "rpc:name", or "storage:method").
 export function fakeSupabase(results: Record<string, FakeResult[]>) {
   const calls: unknown[][] = [];
   const next = (key: string) => Promise.resolve(results[key]?.shift() ?? { data: null, error: null });
@@ -27,6 +30,20 @@ export function fakeSupabase(results: Record<string, FakeResult[]>) {
     rpc(name: string, args: unknown) {
       calls.push(["rpc", name, args]);
       return next(`rpc:${name}`);
+    },
+    storage: {
+      from(bucket: string) {
+        calls.push(["storage", bucket]);
+        return Object.fromEntries(
+          STORAGE_METHODS.map((method) => [
+            method,
+            (...args: unknown[]) => {
+              calls.push([method, ...args]);
+              return next(`storage:${method}`);
+            },
+          ]),
+        );
+      },
     },
   };
   return { client, calls };

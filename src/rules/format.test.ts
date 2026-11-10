@@ -6,6 +6,7 @@ import {
   formatHour,
   formatRelativeDay,
   formatShortDate,
+  formatShortDayLabel,
   formatWeekday,
   formatWeekdayLetter,
 } from "./format";
@@ -30,6 +31,7 @@ describe("formatHour", () => {
 describe("day labels", () => {
   it("formats a training day without shifting it by time zone", () => {
     expect(formatDayLabel("2026-11-01")).toBe("Sunday · Nov 1");
+    expect(formatShortDayLabel("2026-11-01")).toBe("Sun, Nov 1");
     expect(formatShortDate("2026-12-31")).toBe("Dec 31");
     expect(formatWeekday("2026-11-01")).toBe("Sunday");
     expect(formatWeekdayLetter("2026-11-02")).toBe("M");

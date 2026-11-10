@@ -31,6 +31,10 @@ export function formatWeekdayLetter(day: string): string {
   return formatDay(day, { weekday: "narrow" });
 }
 
+export function formatShortDayLabel(day: string): string {
+  return formatDay(day, { weekday: "short", month: "short", day: "numeric" });
+}
+
 export function formatDayLabel(day: string): string {
   return `${formatDay(day, { weekday: "long" })} · ${formatShortDate(day)}`;
 }
