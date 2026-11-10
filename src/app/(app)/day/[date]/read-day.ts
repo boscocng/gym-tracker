@@ -1,14 +1,16 @@
 import { dayStatus } from "@/rules/day-status";
 import { addDays } from "@/rules/days";
+import { formatClock } from "@/rules/format";
 import { groupByExercise, loadLabel } from "@/rules/sets";
 import { formatChange, formatWeight, fromKg, weightIn } from "@/rules/units";
 import { dailyWeights, sevenDayAverageKg, weekChangeKg } from "@/rules/weigh-in";
+import { signPhotoUrls } from "@/server/photos";
 import type { OwnerSettings } from "@/server/settings";
 import type { SessionClient } from "@/server/supabase";
 
 // Everything the Day screen shows for one date, already formatted in the owner's unit.
 export async function readDay(supabase: SessionClient, settings: OwnerSettings, date: string, today: string) {
-  const [sets, mark, readings] = await Promise.all([
+  const [sets, mark, readings, photo] = await Promise.all([
     supabase
       .from("sets")
       .select("id, exercise_id, load_value, load_unit, load_kg, reps, exercises(name, is_bodyweight)")
@@ -21,10 +23,13 @@ export async function readDay(supabase: SessionClient, settings: OwnerSettings, 
       .select("day, measured_at, value, unit, kg, source, flag")
       .gte("day", addDays(date, -13))
       .lte("day", date),
+    supabase.from("photos").select("storage_path, taken_at").eq("day", date).maybeSingle(),
   ]);
-  if (sets.error || mark.error || readings.error) {
-    throw sets.error ?? mark.error ?? readings.error;
+  if (sets.error || mark.error || readings.error || photo.error) {
+    throw sets.error ?? mark.error ?? readings.error ?? photo.error;
   }
+  const photoUrls = await signPhotoUrls(supabase, photo.data ? [photo.data.storage_path] : []);
+  const photoUrl = photo.data && photoUrls.get(photo.data.storage_path);
 
   const weights = dailyWeights(
     readings.data.map((reading) => ({ ...reading, measuredAt: new Date(reading.measured_at) })),
@@ -50,6 +55,10 @@ export async function readDay(supabase: SessionClient, settings: OwnerSettings, 
       trained: new Set(sets.data.length > 0 ? [date] : []),
       marks: new Map(mark.data ? [[date, mark.data.kind]] : []),
     }),
+    photo:
+      photo.data && photoUrl
+        ? { url: photoUrl, takenAt: formatClock(new Date(photo.data.taken_at), settings.time_zone) }
+        : null,
     skipReason: mark.data?.kind === "skip" ? mark.data.reason : null,
     setCount: sets.data.length,
     exercises,

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { StatusMark } from "@/components/status-mark";
 import type { DayStatus } from "@/rules/day-status";
@@ -44,6 +45,43 @@ export function DayHeader({ date, status }: { date: string; status: DayStatus | 
         </span>
       )}
     </header>
+  );
+}
+
+export function DayPhoto({ date, photo }: { date: string; photo: { url: string; takenAt: string } }) {
+  return (
+    <figure className="relative overflow-hidden rounded-[20px] bg-surface">
+      <Image
+        src={photo.url}
+        alt={`Photo for ${formatShortDate(date)}`}
+        width={1080}
+        height={1920}
+        unoptimized
+        className="block h-auto w-full"
+      />
+      <figcaption className="absolute top-3 left-3 rounded-full bg-bg/85 px-2.5 py-1.5 text-[13px]">
+        Taken {photo.takenAt}
+      </figcaption>
+      <Link
+        href={`/compare?b=${date}`}
+        className="absolute right-3 bottom-3 flex h-11 items-center gap-2 rounded-icon border border-border-input bg-bg/88 px-4 text-[15px] font-semibold"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="3" y="5" width="7.5" height="14" rx="1.5" />
+          <rect x="13.5" y="5" width="7.5" height="14" rx="1.5" />
+        </svg>
+        Compare
+      </Link>
+    </figure>
   );
 }
 

@@ -3,7 +3,7 @@ import { isDay } from "@/rules/days";
 import { trainingDay } from "@/rules/training-day";
 import { requireOwnerSettings } from "@/server/settings";
 import { createSessionClient } from "@/server/supabase";
-import { DayHeader, WeightCard, WorkoutCard } from "./day-cards";
+import { DayHeader, DayPhoto, WeightCard, WorkoutCard } from "./day-cards";
 import { readDay } from "./read-day";
 import { SkipReasonCard } from "./skip-reason-card";
 
@@ -20,6 +20,7 @@ export default async function DayPage({ params }: { params: Promise<{ date: stri
     <div className="flex min-h-dvh flex-col">
       <DayHeader date={date} status={day.status} />
       <main className="flex flex-col gap-3 px-4 pb-8">
+        {day.photo && <DayPhoto date={date} photo={day.photo} />}
         {(day.weight || day.average) && (
           <WeightCard weight={day.weight} average={day.average} change={day.change} unit={settings.unit} />
         )}
