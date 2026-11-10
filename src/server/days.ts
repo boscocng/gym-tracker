@@ -7,7 +7,7 @@ const PAGE_SIZE = 1000;
 type Page<Row> = PromiseLike<{ data: Row[] | null; error: PostgrestError | null }>;
 
 // The Data API returns at most 1000 rows per request, so long ranges are read page by page.
-async function readAll<Row>(page: (from: number, to: number) => Page<Row>): Promise<Row[]> {
+export async function readAll<Row>(page: (from: number, to: number) => Page<Row>): Promise<Row[]> {
   const rows: Row[] = [];
   for (let from = 0; ; from += PAGE_SIZE) {
     const { data, error } = await page(from, from + PAGE_SIZE - 1);
