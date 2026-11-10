@@ -184,6 +184,9 @@ isOneToOne: false
             "merge_exercises":
 { Args: { "source_id": number,"target_id": number }; Returns: undefined
                            },
+"start_addon_period":
+{ Args: { "new_details": string,"new_start_day": string,"target_addon_id": number }; Returns: undefined
+                           },
 "to_kg":
 { Args: { "unit": Database["public"]['Enums']["weight_unit"],"value": number }; Returns: number
                            },
