@@ -7,6 +7,7 @@ import {
   restIsFree,
   restWindow,
   skipCountWith,
+  skipsThisMonth,
   trainedBefore,
   unresolvedDays,
 } from "./day-status";
@@ -136,6 +137,26 @@ describe("skipCountWith", () => {
 
   it("counts every new day inside the window, once", () => {
     expect(skipCountWith(["2026-11-07", "2026-11-08", "2026-11-08"], "2026-11-09", skips)).toBe(4);
+  });
+});
+
+describe("skipsThisMonth", () => {
+  it("counts the skips from the 1st of today's month through today", () => {
+    const marks = history(
+      [],
+      [
+        ["2026-10-31", "skip"],
+        ["2026-11-01", "skip"],
+        ["2026-11-05", "rest"],
+        ["2026-11-09", "skip"],
+        ["2026-12-01", "skip"],
+      ],
+      "2026-10-01",
+    );
+
+    expect(skipsThisMonth("2026-11-09", marks)).toBe(2);
+    expect(skipsThisMonth("2026-11-08", marks)).toBe(1);
+    expect(skipsThisMonth("2026-10-31", marks)).toBe(1);
   });
 });
 

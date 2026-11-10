@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { addDays } from "./days";
 import { KG_PER_LB } from "./units";
 import {
   classifyReading,
@@ -8,6 +9,7 @@ import {
   sevenDayAverageKg,
   weekChangeKg,
   weightRangeIn,
+  weightTrend,
   type DayReading,
   type PriorReading,
 } from "./weigh-in";
@@ -166,3 +168,45 @@ describe("weightRangeIn", () => {
 function toKg(pounds: number): number {
   return pounds * KG_PER_LB;
 }
+
+describe("weightTrend", () => {
+  const today = "2026-11-28";
+  const rising = new Map(Array.from({ length: 21 }, (_, index) => [addDays(today, -index), 80 - index * 0.1]));
+
+  it("lists the 14 days ending today with their weight and 7-day average", () => {
+    const { points } = weightTrend(today, rising);
+
+    expect(points).toHaveLength(14);
+    expect(points[0]).toEqual({ day: "2026-11-15", kg: expect.closeTo(78.7), averageKg: expect.closeTo(78.4) });
+    expect(points[13]).toEqual({ day: today, kg: 80, averageKg: expect.closeTo(79.7) });
+  });
+
+  it("compares today's 7-day average with the one from 14 days ago", () => {
+    const trend = weightTrend(today, rising);
+
+    expect(trend.averageKg).toBeCloseTo(79.7);
+    expect(trend.changeKg).toBeCloseTo(1.4);
+    expect(trend.perWeekKg).toBeCloseTo(0.7);
+  });
+
+  it("leaves gaps for days without a weight", () => {
+    const sparse = new Map([
+      ["2026-11-14", 81],
+      ["2026-11-27", 80],
+    ]);
+    const trend = weightTrend(today, sparse);
+
+    expect(trend.points.filter((point) => point.kg !== null).map((point) => point.day)).toEqual(["2026-11-27"]);
+    expect(trend.points[0]).toEqual({ day: "2026-11-15", kg: null, averageKg: 81 });
+    expect(trend.points[5]).toEqual({ day: "2026-11-20", kg: null, averageKg: 81 });
+    expect(trend.points[6]).toEqual({ day: "2026-11-21", kg: null, averageKg: null });
+    expect(trend.changeKg).toBeCloseTo(-1);
+  });
+
+  it("has no change without a weight in the week ending 14 days ago", () => {
+    const recent = new Map([["2026-11-28", 80]]);
+
+    expect(weightTrend(today, recent)).toMatchObject({ averageKg: 80, changeKg: null, perWeekKg: null });
+    expect(weightTrend(today, new Map())).toMatchObject({ averageKg: null, changeKg: null });
+  });
+});

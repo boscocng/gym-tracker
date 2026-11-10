@@ -101,3 +101,18 @@ export function weightRangeIn(unit: Enums<"weight_unit">): { min: number; max: n
   const perKg = unit === "kg" ? 1 : 1 / KG_PER_LB;
   return { min: Math.ceil(MIN_WEIGHT_KG * perKg * 10) / 10, max: Math.floor(MAX_WEIGHT_KG * perKg * 10) / 10 };
 }
+
+const TREND_DAYS = 14;
+
+export type TrendPoint = { day: string; kg: number | null; averageKg: number | null };
+
+export function weightTrend(today: string, dailyKg: ReadonlyMap<string, number>) {
+  const points: TrendPoint[] = Array.from({ length: TREND_DAYS }, (_, index) => {
+    const day = addDays(today, index + 1 - TREND_DAYS);
+    return { day, kg: dailyKg.get(day) ?? null, averageKg: sevenDayAverageKg(day, dailyKg) };
+  });
+  const averageKg = sevenDayAverageKg(today, dailyKg);
+  const earlierKg = sevenDayAverageKg(addDays(today, -TREND_DAYS), dailyKg);
+  const changeKg = averageKg === null || earlierKg === null ? null : averageKg - earlierKg;
+  return { points, averageKg, changeKg, perWeekKg: changeKg === null ? null : (changeKg * 7) / TREND_DAYS };
+}

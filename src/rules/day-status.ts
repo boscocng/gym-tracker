@@ -84,6 +84,11 @@ export function skipCountWith(newDays: readonly string[], today: string, history
   return existing + new Set(newDays.filter(inWindow)).size;
 }
 
+export function skipsThisMonth(today: string, history: DayHistory): number {
+  const month = today.slice(0, 7);
+  return [...history.marks].filter(([day, kind]) => kind === "skip" && day.startsWith(month) && day <= today).length;
+}
+
 export function ordinal(count: number): string {
   const tens = count % 100;
   const suffix = tens >= 11 && tens <= 13 ? "th" : (["th", "st", "nd", "rd"][count % 10] ?? "th");
