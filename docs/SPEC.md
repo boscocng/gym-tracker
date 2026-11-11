@@ -206,7 +206,7 @@ The unit tests must include at least these inputs:
 - A pose switch, Front or Back, also takes an optional relaxed back photo with the same outline. The daily photo is the front one. Back uses a 10-second timer so the owner can turn around, and the ghost shows the previous photo of the same pose.
 - If a live camera isn't available, fall back to `<input type="file" accept="image/*" capture>` without the overlay.
 - Resize on the client before upload: a JPEG about 1080px wide (quality around 0.8), plus a thumbnail about 200px wide for the calendar.
-- Store photos in a private bucket and only serve them through short-lived signed URLs. Never make them public, never put them in the repo, and never send them to the MCP (Phase 6 only reports whether a photo exists).
+- Store photos in a private bucket and only serve them through short-lived signed URLs. Never make them public, never put them in the repo, and never send them to the MCP (Phase 6 only reports which photos exist).
 
 ## 7. Scale ingest
 
@@ -274,7 +274,7 @@ Match the design files. Behavior notes:
   - `get_weights(from, to)`: daily weights and trend.
   - `get_sets(from, to, exercise?)`.
   - `get_exercise_history(exercise)`: top sets and e1RM over time.
-  - `get_days(from, to)`: status, skip reasons, and whether a photo exists.
+  - `get_days(from, to)`: status, skip reasons, and whether a front and a back photo exist.
   - `get_addons()`: every period.
 - Return compact JSON that states its units. Never return photos or signed URLs.
 

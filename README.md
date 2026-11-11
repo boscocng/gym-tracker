@@ -132,7 +132,7 @@ claude mcp add --transport http gym-tracker https://<your-app>.vercel.app/api/mc
 | `get_weights(from, to)` | Each day's weight and its 7-day average. |
 | `get_sets(from, to, exercise?)` | Every set, grouped by day and exercise. |
 | `get_exercise_history(exercise)` | Each day an exercise was trained: set count, top set and estimated one-rep max (Epley). |
-| `get_days(from, to)` | Each tracked day's status (trained, rest, skipped, unresolved or in progress), skip reasons, and whether a photo exists. |
+| `get_days(from, to)` | Each tracked day's status (trained, rest, skipped, unresolved or in progress), skip reasons, and whether a front and a back photo exist. |
 | `get_addons()` | Every add-on period with its details and dates. |
 
 Weights and loads are in the owner's unit, which each response states. Date ranges are `YYYY-MM-DD` and cover at most 366 days per call. Days follow the app's training day, which starts at the rollover hour in the owner's time zone.

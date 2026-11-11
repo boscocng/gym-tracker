@@ -15,6 +15,8 @@ export const MAX_RANGE_DAYS = 366;
 
 export type ReadingRow = DayReading & { day: string };
 
+export type PhotoRow = { day: string; pose: Enums<"photo_pose"> };
+
 export type SetRow = {
   day: string;
   exerciseId: number;
@@ -127,9 +129,13 @@ export function dayReport(
   today: string,
   history: DayHistory,
   skipReasons: ReadonlyMap<string, string>,
-  photoDays: ReadonlySet<string>,
+  photos: readonly PhotoRow[],
 ) {
   const first = from > history.startDate ? from : history.startDate;
+  const daysWith = (pose: Enums<"photo_pose">) =>
+    new Set(photos.filter((photo) => photo.pose === pose).map((photo) => photo.day));
+  const front = daysWith("front");
+  const back = daysWith("back");
   return {
     tracking_started: history.startDate,
     today,
@@ -137,7 +143,8 @@ export function dayReport(
       day,
       status: dayStatus(day, today, history),
       skip_reason: skipReasons.get(day),
-      photo: photoDays.has(day),
+      photo: front.has(day),
+      back_photo: back.has(day) || undefined,
     })),
   };
 }

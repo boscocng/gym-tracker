@@ -10,7 +10,7 @@ import { createSecretClient } from "@/server/supabase";
 import {
   readCounts,
   readExercises,
-  readPhotoDays,
+  readPhotos,
   readReadings,
   readSets,
   readSettings,
@@ -113,12 +113,12 @@ function getDays({ from, to }: { from: string; to: string }): Promise<CallToolRe
     if (problem) {
       return failure(problem);
     }
-    const [history, skipReasons, photoDays] = await Promise.all([
+    const [history, skipReasons, photos] = await Promise.all([
       readDayHistory(supabase, settings.start_date, from, to),
       readSkipReasons(supabase, from, to),
-      readPhotoDays(supabase, from, to),
+      readPhotos(supabase, from, to),
     ]);
-    return json(dayReport(from, to, today, history, skipReasons, photoDays));
+    return json(dayReport(from, to, today, history, skipReasons, photos));
   });
 }
 
@@ -170,7 +170,7 @@ export function registerTools(server: McpServer) {
     "get_days",
     {
       description:
-        "Each day from `from` to `to` (at most 366 days, limited to tracked days up to today): trained, rest, skipped (with the written reason), unresolved, or in_progress for today, and whether a progress photo exists. Photos themselves are never shared.",
+        "Each day from `from` to `to` (at most 366 days, limited to tracked days up to today): trained, rest, skipped (with the written reason), unresolved, or in_progress for today, whether a front progress photo exists, and back_photo on days that also have a back photo. Photos themselves are never shared.",
       inputSchema: z.object(range),
       annotations: READ_ONLY,
     },

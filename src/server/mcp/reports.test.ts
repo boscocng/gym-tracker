@@ -140,23 +140,29 @@ describe("exerciseHistory", () => {
 });
 
 describe("dayReport", () => {
-  it("lists each tracked day's status, skip reason and whether a photo exists", () => {
+  it("lists each tracked day's status, skip reason and which photos exist", () => {
     const report = dayReport(
       "2026-11-01",
       "2026-11-30",
       "2026-11-06",
       HISTORY,
       new Map([["2026-11-04", "A reason that is long enough"]]),
-      new Set(["2026-11-02"]),
+      [
+        { day: "2026-11-02", pose: "front" },
+        { day: "2026-11-05", pose: "front" },
+        { day: "2026-11-05", pose: "back" },
+        { day: "2026-11-06", pose: "back" },
+      ],
     );
 
     expect(report.days).toEqual([
       { day: "2026-11-02", status: "trained", photo: true },
       { day: "2026-11-03", status: "rest", photo: false },
       { day: "2026-11-04", status: "skipped", skip_reason: "A reason that is long enough", photo: false },
-      { day: "2026-11-05", status: "trained", photo: false },
-      { day: "2026-11-06", status: "in_progress", photo: false },
+      { day: "2026-11-05", status: "trained", photo: true, back_photo: true },
+      { day: "2026-11-06", status: "in_progress", photo: false, back_photo: true },
     ]);
+    expect(JSON.stringify(report.days[0])).toBe('{"day":"2026-11-02","status":"trained","photo":true}');
   });
 });
 

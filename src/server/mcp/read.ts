@@ -1,7 +1,7 @@
 import { readAll } from "@/server/days";
 import type { OwnerSettings } from "@/server/settings";
 import type { createSecretClient } from "@/server/supabase";
-import type { Counts, Exercise, ReadingRow, SetRow } from "./reports";
+import type { Counts, Exercise, PhotoRow, ReadingRow, SetRow } from "./reports";
 
 export type SecretClient = ReturnType<typeof createSecretClient>;
 
@@ -88,18 +88,17 @@ export async function readSkipReasons(supabase: SecretClient, from: string, to: 
   return new Map(rows.flatMap((row) => (row.reason ? [[row.day, row.reason] as const] : [])));
 }
 
-export async function readPhotoDays(supabase: SecretClient, from: string, to: string): Promise<Set<string>> {
-  const rows = await readAll((first, last) =>
+export function readPhotos(supabase: SecretClient, from: string, to: string): Promise<PhotoRow[]> {
+  return readAll((first, last) =>
     supabase
       .from("photos")
-      .select("day")
-      .eq("pose", "front")
+      .select("day, pose")
       .gte("day", from)
       .lte("day", to)
       .order("day")
+      .order("pose")
       .range(first, last),
   );
-  return new Set(rows.map((row) => row.day));
 }
 
 const COUNTED = ["sets", "weigh_ins", "photos", "exercises", "addons"] as const;
