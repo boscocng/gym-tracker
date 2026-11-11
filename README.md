@@ -12,7 +12,7 @@ Each deployment has one owner. It runs on Next.js, Vercel and Supabase. The prod
   </tr>
   <tr>
     <td align="center"><img src="docs/screenshots/day.png" width="250" alt="Day: the day's weight with its 7-day average, every set, and the add-ons active that day"><br>Day</td>
-    <td align="center"><img src="docs/screenshots/compare.png" width="250" alt="Compare: two days' photos side by side with the weight change and the days between them"><br>Compare</td>
+    <td align="center"><img src="docs/screenshots/compare.png" width="250" alt="Compare: two days' front or back photos side by side with the weight change and the days between them"><br>Compare</td>
     <td align="center"><img src="docs/screenshots/addons.png" width="250" alt="Add-ons: active add-ons with their day count, and past periods with their dates"><br>Add-ons</td>
   </tr>
 </table>
@@ -23,7 +23,7 @@ The screenshots show the fake data from `npm run seed`.
 
 - **Morning weight.** A smart scale posts each weigh-in through an ESP32 bridge. You can also enter it by hand from Home.
 - **Sets.** Dictate or type one line, like "bench 185 for 6". A rule-based parser reads it against your exercise names and aliases, with no AI calls, and the set number fills itself in.
-- **A daily photo.** The camera shows an outline of a relaxed front pose to stand in, and a faint ghost of your last photo, so every shot lines up. Photos stay in a private storage bucket and are never sent to Claude.
+- **A daily photo.** The camera shows an outline of a relaxed front pose to stand in, and a faint ghost of your last photo, so every shot lines up. You can also take an optional back photo, with a 10-second timer to turn around, since the front doesn't show your back. Photos stay in a private storage bucket and are never sent to Claude.
 - **Add-ons.** Creatine, preworkout, cardio or anything else you're running, stored as dated periods so changes can be compared later.
 - **Day status.** Every day ends up trained, rest or skipped. A rest day is free when you trained on 6 of the 7 days before it (Settings has a stricter rule). Otherwise skipping needs a written reason, and a past day left empty locks the app until you explain it.
 
@@ -48,7 +48,7 @@ npm run dev
 
 Open http://localhost:3000 and sign in as `owner@example.com` with the password `local-only-password`.
 
-The seed creates 90 days of obviously fake data: weigh-ins (including repeated scale broadcasts and one reading from someone else), sets, rest days, skips, add-ons and placeholder photos. It refuses to run against anything but the local stack. To start over, run `npx supabase db reset`, then `npm run seed`.
+The seed creates 90 days of obviously fake data: weigh-ins (including repeated scale broadcasts and one reading from someone else), sets, rest days, skips, add-ons and placeholder photos, with a back photo once a week. It refuses to run against anything but the local stack. To start over, run `npx supabase db reset`, then `npm run seed`.
 
 Before committing, run `npm run typecheck`, `npm run lint` and `npm test`. `npm run test:db` runs the database tests against the local stack.
 
