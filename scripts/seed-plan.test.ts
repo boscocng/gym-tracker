@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { type DayHistory, restIsFree, unresolvedDays } from "@/rules/day-status";
+import { daysBetween } from "@/rules/days";
 import { type AliasTarget, parseSet } from "@/rules/parse-set";
 import { KG_PER_LB } from "@/rules/units";
 import { classifyReading, OUTLIER_WINDOW_MS } from "@/rules/weigh-in";
-import { aliasesOf, EXERCISES, type SeedPlan, seedPlan } from "./seed-plan.mts";
+import { aliasesOf, BACK_PHOTO_EVERY_DAYS, EXERCISES, type SeedPlan, seedPlan } from "./seed-plan.mts";
 
 const NOW = new Date("2026-11-10T05:00:00Z");
 const PLANS = Array.from({ length: 10 }, () => seedPlan(NOW));
@@ -26,6 +27,16 @@ describe("seedPlan", () => {
       expect(unresolvedDays(plan.today, history)).toEqual([]);
       expect(plan.dayMarks.filter((mark) => history.trained.has(mark.day))).toEqual([]);
       expect(times.filter((time) => Date.parse(time) >= NOW.getTime())).toEqual([]);
+    }
+  });
+
+  it("adds a back photo once a week, on days that also have a front photo", () => {
+    for (const plan of PLANS) {
+      const fronts = plan.photos.filter((photo) => photo.pose === "front").map((photo) => photo.day);
+      const backs = plan.photos.filter((photo) => photo.pose === "back").map((photo) => photo.day);
+
+      expect(backs).toEqual(fronts.filter((day) => daysBetween(day, plan.today) % BACK_PHOTO_EVERY_DAYS === 0));
+      expect(backs).toContain(plan.today);
     }
   });
 

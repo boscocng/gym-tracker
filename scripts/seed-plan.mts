@@ -1,4 +1,4 @@
-import type { TablesInsert } from "../src/database.types.ts";
+import type { Enums, TablesInsert } from "../src/database.types.ts";
 import { addDays, dayRange } from "../src/rules/days.ts";
 import { normalizeAlias } from "../src/rules/parse-set.ts";
 import { trainingDay } from "../src/rules/training-day.ts";
@@ -19,7 +19,7 @@ type Lift = {
 export type SeedExercise = { name: string; isBodyweight: boolean; aliases: readonly string[] };
 export type PlannedWeighIn = TablesInsert<"weigh_ins"> & { measured_at: string };
 export type PlannedSet = Omit<TablesInsert<"sets">, "exercise_id"> & { exercise: string };
-export type PlannedPhoto = { day: string; variant: number; takenAt: string };
+export type PlannedPhoto = { day: string; pose: Enums<"photo_pose">; variant: number; takenAt: string };
 export type PlannedAddon = { name: string; periods: Omit<TablesInsert<"addon_periods">, "addon_id">[] };
 export type SeedPlan = {
   today: string;
@@ -35,6 +35,7 @@ export const TIME_ZONE = "UTC";
 export const ROLLOVER_HOUR = 4;
 export const DAYS = 90;
 export const PHOTO_VARIANTS = 4;
+export const BACK_PHOTO_EVERY_DAYS = 7;
 
 export const EXERCISES: readonly SeedExercise[] = [
   { name: "Bench press", isBodyweight: false, aliases: ["bench", "benchpress", "flat bench"] },
@@ -221,11 +222,13 @@ function dayMarks(days: readonly PlannedDay[]): TablesInsert<"day_marks">[] {
 function photos(days: readonly PlannedDay[], today: string, now: Date, random: Random): PlannedPhoto[] {
   return days
     .filter(({ day }) => day === today || random() < 0.85)
-    .map(({ day, index }) => ({
-      day,
-      variant: Math.floor((index * PHOTO_VARIANTS) / DAYS),
-      takenAt: clockTime(day, 7 * 60 + 10 + Math.floor(random() * 20), now),
-    }));
+    .flatMap(({ day, index }) => {
+      const variant = Math.floor((index * PHOTO_VARIANTS) / DAYS);
+      const minutes = 7 * 60 + 10 + Math.floor(random() * 20);
+      const front: PlannedPhoto = { day, pose: "front", variant, takenAt: clockTime(day, minutes, now) };
+      const backDay = (DAYS - 1 - index) % BACK_PHOTO_EVERY_DAYS === 0;
+      return backDay ? [front, { ...front, pose: "back", takenAt: clockTime(day, minutes + 2, now) }] : [front];
+    });
 }
 
 export function seedPlan(now: Date, random: Random = Math.random): SeedPlan {

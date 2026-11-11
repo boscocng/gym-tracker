@@ -70,7 +70,7 @@ async function uploadPhotos(photos: readonly PlannedPhoto[]): Promise<void> {
   );
   const bucket = supabase.storage.from(PHOTO_BUCKET);
   const rows: TablesInsert<"photos">[] = [];
-  for (const { day, variant, takenAt } of photos) {
+  for (const { day, pose, variant, takenAt } of photos) {
     const id = randomUUID();
     const paths = { storage_path: `${day}/${id}.jpg`, thumb_path: `${day}/${id}-thumb.jpg` };
     const uploads = await Promise.all([
@@ -78,7 +78,7 @@ async function uploadPhotos(photos: readonly PlannedPhoto[]): Promise<void> {
       bucket.upload(paths.thumb_path, files[variant].thumb, { contentType: "image/jpeg" }),
     ]);
     uploads.forEach(check);
-    rows.push({ day, pose: "front", ...paths, taken_at: takenAt });
+    rows.push({ day, pose, ...paths, taken_at: takenAt });
   }
   check(await supabase.from("photos").insert(rows));
 }
