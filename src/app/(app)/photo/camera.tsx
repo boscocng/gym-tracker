@@ -1,19 +1,19 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { SAVE_FAILED } from "@/components/messages";
 import type { Enums } from "@/database.types";
 import { savePhoto } from "./actions";
-import { CameraControls, CameraTopBar, FilePicker } from "./camera-parts";
+import { CameraControls, CameraTopBar, FilePicker, PoseSwitch, Viewfinder } from "./camera-parts";
 import { fileForm, photoForm } from "./encode";
-import { PoseOutline } from "./pose-outline";
 import { type Facing, useCamera } from "./use-camera";
 
-type Props = { title: string; ghost: { url: string; hint: string } | null };
+type Pose = Enums<"photo_pose">;
+export type Ghost = { url: string; hint: string };
+type Props = { dayLabel: string; ghosts: Record<Pose, Ghost | null> };
 
-const COUNTDOWN_SECONDS = 3;
+const COUNTDOWN_SECONDS: Record<Pose, number> = { front: 3, back: 10 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -22,7 +22,7 @@ function useSavePhoto() {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function save(pose: Enums<"photo_pose">, makeForm: () => Promise<FormData>) {
+  function save(pose: Pose, makeForm: () => Promise<FormData>) {
     setError(null);
     startTransition(async () => {
       const problem = await makeForm()
@@ -42,7 +42,8 @@ function useSavePhoto() {
   return { error, pending, save };
 }
 
-export function Camera({ title, ghost }: Props) {
+export function Camera({ dayLabel, ghosts }: Props) {
+  const [pose, setPose] = useState<Pose>("front");
   const [facing, setFacing] = useState<Facing>("user");
   const [timer, setTimer] = useState(true);
   const [ghostOn, setGhostOn] = useState(true);
@@ -50,10 +51,11 @@ export function Camera({ title, ghost }: Props) {
   const { error, pending, save } = useSavePhoto();
   const { videoRef, state } = useCamera(facing);
   const live = state !== "unavailable";
+  const ghost = ghosts[pose];
 
   async function shoot() {
     if (timer) {
-      for (let count = COUNTDOWN_SECONDS; count > 0; count -= 1) {
+      for (let count = COUNTDOWN_SECONDS[pose]; count > 0; count -= 1) {
         setCountdown(count);
         await sleep(1000);
       }
@@ -61,7 +63,7 @@ export function Camera({ title, ghost }: Props) {
     }
     const video = videoRef.current;
     if (video && video.videoWidth > 0) {
-      save("front", () => photoForm(video, video.videoWidth, video.videoHeight, facing === "user"));
+      save(pose, () => photoForm(video, video.videoWidth, video.videoHeight, facing === "user"));
     }
   }
 
@@ -74,26 +76,18 @@ export function Camera({ title, ghost }: Props) {
   return (
     <main className="relative h-dvh overflow-hidden bg-black">
       {live ? (
-        <>
-          <video
-            ref={videoRef}
-            playsInline
-            muted
-            aria-label="Camera view"
-            className={`absolute inset-0 size-full object-cover ${facing === "user" ? "-scale-x-100" : ""}`}
-          />
-          {ghost && ghostOn && (
-            <Image src={ghost.url} alt="" fill unoptimized className="pointer-events-none object-cover opacity-35" />
-          )}
-          <PoseOutline />
-          {countdown !== null && (
-            <span
-              aria-live="assertive"
-              className="absolute inset-0 flex items-center justify-center font-condensed text-[120px] font-bold drop-shadow-lg"
-            >
-              {countdown}
-            </span>
-          )}
+        <Viewfinder
+          videoRef={videoRef}
+          mirrored={facing === "user"}
+          ghostUrl={ghost && ghostOn ? ghost.url : null}
+          countdown={countdown}
+        />
+      ) : (
+        <FilePicker busy={pending} onFile={(file) => save(pose, () => fileForm(file))} />
+      )}
+      <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 pb-[max(env(safe-area-inset-bottom),40px)]">
+        <PoseSwitch pose={pose} onChange={setPose} disabled={pending || countdown !== null} />
+        {live && (
           <CameraControls
             ghostOn={ghost ? ghostOn : null}
             onGhostChange={setGhostOn}
@@ -101,11 +95,15 @@ export function Camera({ title, ghost }: Props) {
             onShoot={shoot}
             onFlip={() => setFacing(facing === "user" ? "environment" : "user")}
           />
-        </>
-      ) : (
-        <FilePicker busy={pending} onFile={(file) => save("front", () => fileForm(file))} />
-      )}
-      <CameraTopBar title={title} timer={live ? timer : null} onTimerChange={setTimer} notes={notes} />
+        )}
+      </div>
+      <CameraTopBar
+        title={`${pose === "back" ? "Back photo" : "Photo"} · ${dayLabel}`}
+        timer={live ? timer : null}
+        seconds={COUNTDOWN_SECONDS[pose]}
+        onTimerChange={setTimer}
+        notes={notes}
+      />
     </main>
   );
 }

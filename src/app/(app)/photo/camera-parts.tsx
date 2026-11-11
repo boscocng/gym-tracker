@@ -1,5 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
+import { Constants, type Enums } from "@/database.types";
+import { PoseOutline } from "./pose-outline";
 
 const glass = "bg-[rgba(13,13,12,0.75)]";
 
@@ -21,14 +24,48 @@ function Icon({ size, children }: { size: number; children: ReactNode }) {
   );
 }
 
+type ViewfinderProps = {
+  videoRef: RefObject<HTMLVideoElement | null>;
+  mirrored: boolean;
+  ghostUrl: string | null;
+  countdown: number | null;
+};
+
+export function Viewfinder({ videoRef, mirrored, ghostUrl, countdown }: ViewfinderProps) {
+  return (
+    <>
+      <video
+        ref={videoRef}
+        playsInline
+        muted
+        aria-label="Camera view"
+        className={`absolute inset-0 size-full object-cover ${mirrored ? "-scale-x-100" : ""}`}
+      />
+      {ghostUrl && (
+        <Image src={ghostUrl} alt="" fill unoptimized className="pointer-events-none object-cover opacity-35" />
+      )}
+      <PoseOutline />
+      {countdown !== null && (
+        <span
+          aria-live="assertive"
+          className="absolute inset-0 flex items-center justify-center font-condensed text-[120px] font-bold drop-shadow-lg"
+        >
+          {countdown}
+        </span>
+      )}
+    </>
+  );
+}
+
 type TopBarProps = {
   title: string;
   timer: boolean | null;
+  seconds: number;
   onTimerChange: (timer: boolean) => void;
   notes: { text: string; alert?: boolean }[];
 };
 
-export function CameraTopBar({ title, timer, onTimerChange, notes }: TopBarProps) {
+export function CameraTopBar({ title, timer, seconds, onTimerChange, notes }: TopBarProps) {
   return (
     <div className="absolute inset-x-0 top-0 flex flex-col items-center gap-5 px-4 pt-safe">
       <div className="flex w-full items-center justify-between gap-3">
@@ -45,12 +82,12 @@ export function CameraTopBar({ title, timer, onTimerChange, notes }: TopBarProps
         ) : (
           <button
             type="button"
-            aria-label="Self-timer, 3 seconds"
+            aria-label={`Self-timer, ${seconds} seconds`}
             aria-pressed={timer}
             onClick={() => onTimerChange(!timer)}
             className={`size-11 rounded-full border-[1.5px] font-condensed text-base font-bold ${glass} ${timer ? "border-accent" : "border-transparent text-text-2"}`}
           >
-            3s
+            {seconds}s
           </button>
         )}
       </div>
@@ -77,7 +114,7 @@ type ControlsProps = {
 
 export function CameraControls({ ghostOn, onGhostChange, canShoot, onShoot, onFlip }: ControlsProps) {
   return (
-    <div className="absolute inset-x-0 bottom-0 grid grid-cols-3 items-center pb-[max(env(safe-area-inset-bottom),40px)]">
+    <div className="grid w-full grid-cols-3 items-center">
       {ghostOn === null ? (
         <span />
       ) : (
@@ -116,6 +153,31 @@ export function CameraControls({ ghostOn, onGhostChange, canShoot, onShoot, onFl
           <path d="M4 20v-4h4" />
         </Icon>
       </button>
+    </div>
+  );
+}
+
+type PoseSwitchProps = {
+  pose: Enums<"photo_pose">;
+  onChange: (pose: Enums<"photo_pose">) => void;
+  disabled: boolean;
+};
+
+export function PoseSwitch({ pose, onChange, disabled }: PoseSwitchProps) {
+  return (
+    <div role="group" aria-label="Pose" className="grid grid-cols-2 gap-1 rounded-full bg-[rgba(13,13,12,0.8)] p-1">
+      {Constants.public.Enums.photo_pose.map((option) => (
+        <button
+          key={option}
+          type="button"
+          aria-pressed={pose === option}
+          disabled={disabled}
+          onClick={() => onChange(option)}
+          className={`h-9 rounded-full px-5 text-sm font-semibold capitalize disabled:opacity-60 ${pose === option ? "bg-accent text-on-accent" : "text-text-2"}`}
+        >
+          {option}
+        </button>
+      ))}
     </div>
   );
 }
