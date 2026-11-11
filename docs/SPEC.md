@@ -252,9 +252,9 @@ Match the design files. Behavior notes:
 - Tapping a cell opens the Day screen.
 - A legend shows the month's counts.
 
-**Day** (`/day/[date]`): the full photo, the weight with its 7-day average, every set grouped by exercise, the add-ons active that day, the skip reason if the day was skipped, and a Compare button.
+**Day** (`/day/[date]`): the full photo (with the back photo below it, if there is one), the weight with its 7-day average, every set grouped by exercise, the add-ons active that day, the skip reason if the day was skipped, and a Compare button.
 
-**Compare** (`/compare`): two day pickers, the two photos side by side with their date and weight, the weight change, and the number of days between them.
+**Compare** (`/compare`): a Front/Back switch, two day pickers listing the days with a photo of that pose, the two photos side by side with their date and weight, the weight change, and the number of days between them.
 
 **Add-ons** (`/addons`): the active list with details and day count, past periods with their date ranges, and "+" to add one. The edit screen follows 6.8.
 

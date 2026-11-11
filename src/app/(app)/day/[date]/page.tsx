@@ -20,7 +20,9 @@ export default async function DayPage({ params }: { params: Promise<{ date: stri
     <div className="flex min-h-dvh flex-col">
       <DayHeader date={date} status={day.status} />
       <main className="flex flex-col gap-3 px-4 pb-8">
-        {day.photo && <DayPhoto date={date} photo={day.photo} />}
+        {day.photos.map((photo) => (
+          <DayPhoto key={photo.pose} date={date} photo={photo} />
+        ))}
         {(day.weight || day.average) && (
           <WeightCard weight={day.weight} average={day.average} change={day.change} unit={settings.unit} />
         )}

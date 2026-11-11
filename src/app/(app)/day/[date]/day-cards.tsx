@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Chip } from "@/components/chip";
 import { StatusMark } from "@/components/status-mark";
+import type { Enums } from "@/database.types";
 import type { DayStatus } from "@/rules/day-status";
 import { formatShortDate, formatWeekday } from "@/rules/format";
 
@@ -49,22 +50,25 @@ export function DayHeader({ date, status }: { date: string; status: DayStatus | 
   );
 }
 
-export function DayPhoto({ date, photo }: { date: string; photo: { url: string; takenAt: string } }) {
+type DayPhotoProps = { date: string; photo: { pose: Enums<"photo_pose">; url: string; takenAt: string } };
+
+export function DayPhoto({ date, photo }: DayPhotoProps) {
+  const back = photo.pose === "back";
   return (
     <figure className="relative overflow-hidden rounded-[20px] bg-surface">
       <Image
         src={photo.url}
-        alt={`Photo for ${formatShortDate(date)}`}
+        alt={`${back ? "Back photo" : "Photo"} for ${formatShortDate(date)}`}
         width={1080}
         height={1920}
         unoptimized
         className="block h-auto w-full"
       />
       <figcaption className="absolute top-3 left-3 rounded-full bg-bg/85 px-2.5 py-1.5 text-[13px]">
-        Taken {photo.takenAt}
+        {back ? "Back, taken" : "Taken"} {photo.takenAt}
       </figcaption>
       <Link
-        href={`/compare?b=${date}`}
+        href={`/compare?${new URLSearchParams({ pose: photo.pose, b: date })}`}
         className="absolute right-3 bottom-3 flex h-11 items-center gap-2 rounded-icon border border-border-input bg-bg/88 px-4 text-[15px] font-semibold"
       >
         <svg

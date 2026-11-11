@@ -1,3 +1,4 @@
+import type { Enums } from "@/database.types";
 import { daysBetween } from "@/rules/days";
 import { comparePair } from "@/rules/photos";
 import { formatChange, formatWeight, weightIn } from "@/rules/units";
@@ -7,9 +8,15 @@ import { signPhotoUrls } from "@/server/photos";
 import type { OwnerSettings } from "@/server/settings";
 import type { SessionClient } from "@/server/supabase";
 
-export async function readCompare(supabase: SessionClient, settings: OwnerSettings, a: string | null, b: string | null) {
+export async function readCompare(
+  supabase: SessionClient,
+  settings: OwnerSettings,
+  pose: Enums<"photo_pose">,
+  a: string | null,
+  b: string | null,
+) {
   const photoDays = (
-    await readAll((from, to) => supabase.from("photos").select("day").eq("pose", "front").order("day").range(from, to))
+    await readAll((from, to) => supabase.from("photos").select("day").eq("pose", pose).order("day").range(from, to))
   ).map((photo) => photo.day);
   const pair = comparePair(photoDays, a, b);
   if (!pair) {
@@ -18,7 +25,7 @@ export async function readCompare(supabase: SessionClient, settings: OwnerSettin
 
   const days = [pair.before, pair.after];
   const [photos, readings] = await Promise.all([
-    supabase.from("photos").select("day, storage_path").eq("pose", "front").in("day", days),
+    supabase.from("photos").select("day, storage_path").eq("pose", pose).in("day", days),
     supabase.from("weigh_ins").select("day, measured_at, value, unit, kg, source, flag").in("day", days),
   ]);
   if (photos.error || readings.error) {

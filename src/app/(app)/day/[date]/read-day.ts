@@ -1,3 +1,4 @@
+import { Constants } from "@/database.types";
 import { activeOn } from "@/rules/addons";
 import { dayStatus } from "@/rules/day-status";
 import { addDays } from "@/rules/days";
@@ -10,9 +11,22 @@ import { signPhotoUrls } from "@/server/photos";
 import type { OwnerSettings } from "@/server/settings";
 import type { SessionClient } from "@/server/supabase";
 
+async function readPhotos(supabase: SessionClient, date: string, timeZone: string) {
+  const { data, error } = await supabase.from("photos").select("pose, storage_path, taken_at").eq("day", date);
+  if (error) {
+    throw error;
+  }
+  const urls = await signPhotoUrls(supabase, data.map((photo) => photo.storage_path));
+  return Constants.public.Enums.photo_pose.flatMap((pose) => {
+    const photo = data.find((row) => row.pose === pose);
+    const url = photo && urls.get(photo.storage_path);
+    return photo && url ? [{ pose, url, takenAt: formatClock(new Date(photo.taken_at), timeZone) }] : [];
+  });
+}
+
 // Everything the Day screen shows for one date, already formatted in the owner's unit.
 export async function readDay(supabase: SessionClient, settings: OwnerSettings, date: string, today: string) {
-  const [sets, mark, readings, photo, addons] = await Promise.all([
+  const [sets, mark, readings, photos, addons] = await Promise.all([
     supabase
       .from("sets")
       .select("id, exercise_id, load_value, load_unit, load_kg, reps, exercises(name, is_bodyweight)")
@@ -25,14 +39,12 @@ export async function readDay(supabase: SessionClient, settings: OwnerSettings, 
       .select("day, measured_at, value, unit, kg, source, flag")
       .gte("day", addDays(date, -13))
       .lte("day", date),
-    supabase.from("photos").select("storage_path, taken_at").eq("day", date).eq("pose", "front").maybeSingle(),
+    readPhotos(supabase, date, settings.time_zone),
     readAddons(supabase),
   ]);
-  if (sets.error || mark.error || readings.error || photo.error) {
-    throw sets.error ?? mark.error ?? readings.error ?? photo.error;
+  if (sets.error || mark.error || readings.error) {
+    throw sets.error ?? mark.error ?? readings.error;
   }
-  const photoUrls = await signPhotoUrls(supabase, photo.data ? [photo.data.storage_path] : []);
-  const photoUrl = photo.data && photoUrls.get(photo.data.storage_path);
 
   const weights = dailyWeights(
     readings.data.map((reading) => ({ ...reading, measuredAt: new Date(reading.measured_at) })),
@@ -58,10 +70,7 @@ export async function readDay(supabase: SessionClient, settings: OwnerSettings, 
       trained: new Set(sets.data.length > 0 ? [date] : []),
       marks: new Map(mark.data ? [[date, mark.data.kind]] : []),
     }),
-    photo:
-      photo.data && photoUrl
-        ? { url: photoUrl, takenAt: formatClock(new Date(photo.data.taken_at), settings.time_zone) }
-        : null,
+    photos,
     skipReason: mark.data?.kind === "skip" ? mark.data.reason : null,
     addons: activeOn(addons, date),
     setCount: sets.data.length,

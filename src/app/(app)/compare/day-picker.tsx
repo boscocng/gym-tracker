@@ -1,11 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import type { Enums } from "@/database.types";
 import { formatShortDate } from "@/rules/format";
 
-type Props = { label: string; param: "a" | "b"; pair: { a: string; b: string }; days: string[] };
+type Props = {
+  label: string;
+  param: "a" | "b";
+  pose: Enums<"photo_pose">;
+  pair: { a: string; b: string };
+  days: string[];
+};
 
-export function DayPicker({ label, param, pair, days }: Props) {
+export function DayPicker({ label, param, pose, pair, days }: Props) {
   const router = useRouter();
   const value = pair[param];
   return (
@@ -31,7 +38,9 @@ export function DayPicker({ label, param, pair, days }: Props) {
       <select
         aria-label={`${label}: ${formatShortDate(value)}. Change day`}
         value={value}
-        onChange={(event) => router.push(`/compare?${new URLSearchParams({ ...pair, [param]: event.target.value })}`)}
+        onChange={(event) =>
+          router.push(`/compare?${new URLSearchParams({ pose, ...pair, [param]: event.target.value })}`)
+        }
         className="absolute inset-0 opacity-0"
       >
         {days.map((day) => (
