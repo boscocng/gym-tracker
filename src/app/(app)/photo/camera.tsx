@@ -7,6 +7,7 @@ import { SAVE_FAILED } from "@/components/messages";
 import { savePhoto } from "./actions";
 import { CameraControls, CameraTopBar, FilePicker } from "./camera-parts";
 import { fileForm, photoForm } from "./encode";
+import { PoseOutline } from "./pose-outline";
 import { type Facing, useCamera } from "./use-camera";
 
 type Props = { title: string; ghost: { url: string; hint: string } | null };
@@ -80,6 +81,7 @@ export function Camera({ title, ghost }: Props) {
           {ghost && ghostOn && (
             <Image src={ghost.url} alt="" fill unoptimized className="pointer-events-none object-cover opacity-35" />
           )}
+          <PoseOutline />
           {countdown !== null && (
             <span
               aria-live="assertive"

@@ -202,6 +202,7 @@ The unit tests must include at least these inputs:
 ### 6.9 Photos
 
 - Capture in the app with `getUserMedia`. Include a front/back camera toggle, a 3-second self-timer, and a toggleable "ghost" overlay of the previous photo at about 35% opacity.
+- Show a dashed outline of a relaxed front pose over the live camera: standing straight, arms hanging slightly away from the sides, framed from the head to the knees. Every photo then has the same pose and distance.
 - If a live camera isn't available, fall back to `<input type="file" accept="image/*" capture>` without the overlay.
 - Resize on the client before upload: a JPEG about 1080px wide (quality around 0.8), plus a thumbnail about 200px wide for the calendar.
 - Store photos in a private bucket and only serve them through short-lived signed URLs. Never make them public, never put them in the repo, and never send them to the MCP (Phase 6 only reports whether a photo exists).

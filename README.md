@@ -23,7 +23,7 @@ The screenshots show the fake data from `npm run seed`.
 
 - **Morning weight.** A smart scale posts each weigh-in through an ESP32 bridge. You can also enter it by hand from Home.
 - **Sets.** Dictate or type one line, like "bench 185 for 6". A rule-based parser reads it against your exercise names and aliases, with no AI calls, and the set number fills itself in.
-- **A daily photo.** The camera shows a faint ghost of your last photo so every shot lines up. Photos stay in a private storage bucket and are never sent to Claude.
+- **A daily photo.** The camera shows an outline of a relaxed front pose to stand in, and a faint ghost of your last photo, so every shot lines up. Photos stay in a private storage bucket and are never sent to Claude.
 - **Add-ons.** Creatine, preworkout, cardio or anything else you're running, stored as dated periods so changes can be compared later.
 - **Day status.** Every day ends up trained, rest or skipped. A rest day is free when you trained on 6 of the 7 days before it (Settings has a stricter rule). Otherwise skipping needs a written reason, and a past day left empty locks the app until you explain it.
 
