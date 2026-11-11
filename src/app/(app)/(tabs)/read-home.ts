@@ -31,7 +31,7 @@ async function readRecent(supabase: SessionClient, settings: OwnerSettings, toda
         .range(from, to),
     ),
     readDayHistory(supabase, settings.start_date, monthStart < weekStart ? monthStart : weekStart, today),
-    supabase.from("photos").select("taken_at").eq("day", today).maybeSingle(),
+    supabase.from("photos").select("taken_at").eq("day", today).eq("pose", "front").maybeSingle(),
     readAddons(supabase),
   ]);
   if (readings.error || photo.error) {

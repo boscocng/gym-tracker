@@ -101,7 +101,7 @@ Propose the final schema in Phase 0 for review. Starting point:
 - `sets`: day, exercise id, set number, load value, load unit, a generated `load_kg`, reps, the raw input text, created at.
 - `weigh_ins`: measured at, day, value, unit, a generated `kg`, source (`scale` or `manual`), and flags (`duplicate`, `outlier`).
 - `day_marks`: day (unique), kind (`rest` or `skip`), reason (required for skips), resolved via (`normal` or `lock`), created at. "Trained" isn't stored: a day is trained if it has at least one set.
-- `photos`: day, storage path, thumbnail path, taken at. One current photo per day; a retake replaces it.
+- `photos`: day, pose (front or back), storage path, thumbnail path, taken at. One current photo per day and pose; a retake replaces it.
 - `addons` (name) and `addon_periods` (addon id, details, start day, end day, which stays null while active).
 
 Rules for every table:

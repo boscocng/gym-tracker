@@ -90,7 +90,14 @@ export async function readSkipReasons(supabase: SecretClient, from: string, to: 
 
 export async function readPhotoDays(supabase: SecretClient, from: string, to: string): Promise<Set<string>> {
   const rows = await readAll((first, last) =>
-    supabase.from("photos").select("day").gte("day", from).lte("day", to).order("day").range(first, last),
+    supabase
+      .from("photos")
+      .select("day")
+      .eq("pose", "front")
+      .gte("day", from)
+      .lte("day", to)
+      .order("day")
+      .range(first, last),
   );
   return new Set(rows.map((row) => row.day));
 }

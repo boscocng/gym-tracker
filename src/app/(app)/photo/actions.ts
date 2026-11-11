@@ -1,7 +1,9 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { z } from "zod";
 import { PHOTO_UNREADABLE } from "@/components/messages";
+import { Constants } from "@/database.types";
 import { trainingDay } from "@/rules/training-day";
 import { PHOTO_BUCKET } from "@/server/photos";
 import { requireOwnerSettings } from "@/server/settings";
@@ -9,6 +11,7 @@ import { createSessionClient } from "@/server/supabase";
 
 const MAX_PHOTO_BYTES = 3 * 1024 * 1024;
 const MAX_THUMB_BYTES = 256 * 1024;
+const poseField = z.enum(Constants.public.Enums.photo_pose);
 
 async function jpeg(entry: FormDataEntryValue | null, maxBytes: number): Promise<File | null> {
   if (!(entry instanceof File) || entry.size === 0 || entry.size > maxBytes) {
@@ -20,6 +23,7 @@ async function jpeg(entry: FormDataEntryValue | null, maxBytes: number): Promise
 
 export async function savePhoto(form: FormData): Promise<string | null> {
   const settings = await requireOwnerSettings();
+  const pose = poseField.parse(form.get("pose"));
   const [photo, thumb] = await Promise.all([
     jpeg(form.get("photo"), MAX_PHOTO_BYTES),
     jpeg(form.get("thumb"), MAX_THUMB_BYTES),
@@ -35,6 +39,7 @@ export async function savePhoto(form: FormData): Promise<string | null> {
     .from("photos")
     .select("storage_path, thumb_path")
     .eq("day", day)
+    .eq("pose", pose)
     .maybeSingle();
   if (error) {
     throw error;
@@ -50,7 +55,7 @@ export async function savePhoto(form: FormData): Promise<string | null> {
   const uploadError = uploads.find((upload) => upload.error)?.error;
   const rowError = uploadError
     ? null
-    : (await supabase.from("photos").upsert({ day, ...paths, taken_at: now.toISOString() })).error;
+    : (await supabase.from("photos").upsert({ day, pose, ...paths, taken_at: now.toISOString() })).error;
   if (uploadError || rowError) {
     await bucket.remove([paths.storage_path, paths.thumb_path]);
     throw uploadError ?? rowError;

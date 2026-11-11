@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { SAVE_FAILED } from "@/components/messages";
+import type { Enums } from "@/database.types";
 import { savePhoto } from "./actions";
 import { CameraControls, CameraTopBar, FilePicker } from "./camera-parts";
 import { fileForm, photoForm } from "./encode";
@@ -21,11 +22,14 @@ function useSavePhoto() {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function save(makeForm: () => Promise<FormData>) {
+  function save(pose: Enums<"photo_pose">, makeForm: () => Promise<FormData>) {
     setError(null);
     startTransition(async () => {
       const problem = await makeForm()
-        .then(savePhoto)
+        .then((form) => {
+          form.append("pose", pose);
+          return savePhoto(form);
+        })
         .catch(() => SAVE_FAILED);
       if (problem) {
         setError(problem);
@@ -57,7 +61,7 @@ export function Camera({ title, ghost }: Props) {
     }
     const video = videoRef.current;
     if (video && video.videoWidth > 0) {
-      save(() => photoForm(video, video.videoWidth, video.videoHeight, facing === "user"));
+      save("front", () => photoForm(video, video.videoWidth, video.videoHeight, facing === "user"));
     }
   }
 
@@ -99,7 +103,7 @@ export function Camera({ title, ghost }: Props) {
           />
         </>
       ) : (
-        <FilePicker busy={pending} onFile={(file) => save(() => fileForm(file))} />
+        <FilePicker busy={pending} onFile={(file) => save("front", () => fileForm(file))} />
       )}
       <CameraTopBar title={title} timer={live ? timer : null} onTimerChange={setTimer} notes={notes} />
     </main>

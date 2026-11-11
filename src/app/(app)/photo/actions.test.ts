@@ -19,10 +19,11 @@ function file(name: string, start: number[] = JPEG_START, size = 16) {
   return new File([bytes], name, { type: "image/jpeg" });
 }
 
-function photoForm(photo: File | string, thumb: File | string) {
+function photoForm(photo: File | string, thumb: File | string, pose = "front") {
   const form = new FormData();
   form.append("photo", photo);
   form.append("thumb", thumb);
+  form.append("pose", pose);
   return form;
 }
 
@@ -69,12 +70,16 @@ describe("savePhoto", () => {
       ["from", "photos"],
       ["select", "storage_path, thumb_path"],
       ["eq", "day", DAY],
+      ["eq", "pose", "front"],
       ["maybeSingle"],
       ["storage", "photos"],
       ["upload", photoPath, photo, { contentType: "image/jpeg" }],
       ["upload", thumbPath, thumb, { contentType: "image/jpeg" }],
       ["from", "photos"],
-      ["upsert", { day: DAY, storage_path: photoPath, thumb_path: thumbPath, taken_at: NOW.toISOString() }],
+      [
+        "upsert",
+        { day: DAY, pose: "front", storage_path: photoPath, thumb_path: thumbPath, taken_at: NOW.toISOString() },
+      ],
     ]);
     const uploads = calls.filter(([method]) => method === "upload");
     expect(uploads[0][2]).toBe(photo);
@@ -92,6 +97,30 @@ describe("savePhoto", () => {
       ["upsert", expect.objectContaining({ day: DAY })],
       ["remove", [`${DAY}/old.jpg`, `${DAY}/old-thumb.jpg`]],
     ]);
+  });
+
+  it("replaces only the day's photo of the same pose", async () => {
+    const calls = fakeSupabase({
+      photos: [{ data: { storage_path: `${DAY}/old-back.jpg`, thumb_path: `${DAY}/old-back-thumb.jpg` }, error: null }],
+    });
+
+    expect(await savePhoto(photoForm(file("photo.jpg"), file("thumb.jpg"), "back"))).toBeNull();
+
+    expect(calls.slice(2, 4)).toEqual([
+      ["eq", "day", DAY],
+      ["eq", "pose", "back"],
+    ]);
+    expect(calls.slice(-2)).toEqual([
+      ["upsert", expect.objectContaining({ day: DAY, pose: "back" })],
+      ["remove", [`${DAY}/old-back.jpg`, `${DAY}/old-back-thumb.jpg`]],
+    ]);
+  });
+
+  it.each([["side"], [""]])("refuses a pose it doesn't know: %j", async (pose) => {
+    const calls = fakeSupabase({});
+
+    await expect(savePhoto(photoForm(file("photo.jpg"), file("thumb.jpg"), pose))).rejects.toThrow();
+    expect(calls).toEqual([]);
   });
 
   it.each([

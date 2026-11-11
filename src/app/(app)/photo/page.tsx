@@ -13,6 +13,7 @@ export default async function PhotoPage() {
   const { data: previous, error } = await supabase
     .from("photos")
     .select("day, storage_path")
+    .eq("pose", "front")
     .lt("day", today)
     .order("day", { ascending: false })
     .limit(1)

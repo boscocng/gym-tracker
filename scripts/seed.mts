@@ -78,7 +78,7 @@ async function uploadPhotos(photos: readonly PlannedPhoto[]): Promise<void> {
       bucket.upload(paths.thumb_path, files[variant].thumb, { contentType: "image/jpeg" }),
     ]);
     uploads.forEach(check);
-    rows.push({ day, ...paths, taken_at: takenAt });
+    rows.push({ day, pose: "front", ...paths, taken_at: takenAt });
   }
   check(await supabase.from("photos").insert(rows));
 }

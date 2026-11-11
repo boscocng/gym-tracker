@@ -25,7 +25,7 @@ export async function readDay(supabase: SessionClient, settings: OwnerSettings, 
       .select("day, measured_at, value, unit, kg, source, flag")
       .gte("day", addDays(date, -13))
       .lte("day", date),
-    supabase.from("photos").select("storage_path, taken_at").eq("day", date).maybeSingle(),
+    supabase.from("photos").select("storage_path, taken_at").eq("day", date).eq("pose", "front").maybeSingle(),
     readAddons(supabase),
   ]);
   if (sets.error || mark.error || readings.error || photo.error) {

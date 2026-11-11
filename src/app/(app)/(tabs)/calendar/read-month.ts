@@ -18,7 +18,7 @@ export async function readMonth(supabase: SessionClient, settings: OwnerSettings
       .select("day, measured_at, value, unit, kg, source, flag")
       .gte("day", first)
       .lte("day", last),
-    supabase.from("photos").select("day, thumb_path").gte("day", first).lte("day", last),
+    supabase.from("photos").select("day, thumb_path").eq("pose", "front").gte("day", first).lte("day", last),
   ]);
   if (readings.error || photos.error) {
     throw readings.error ?? photos.error;

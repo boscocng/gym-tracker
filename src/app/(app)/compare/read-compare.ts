@@ -9,7 +9,7 @@ import type { SessionClient } from "@/server/supabase";
 
 export async function readCompare(supabase: SessionClient, settings: OwnerSettings, a: string | null, b: string | null) {
   const photoDays = (
-    await readAll((from, to) => supabase.from("photos").select("day").order("day").range(from, to))
+    await readAll((from, to) => supabase.from("photos").select("day").eq("pose", "front").order("day").range(from, to))
   ).map((photo) => photo.day);
   const pair = comparePair(photoDays, a, b);
   if (!pair) {
@@ -18,7 +18,7 @@ export async function readCompare(supabase: SessionClient, settings: OwnerSettin
 
   const days = [pair.before, pair.after];
   const [photos, readings] = await Promise.all([
-    supabase.from("photos").select("day, storage_path").in("day", days),
+    supabase.from("photos").select("day, storage_path").eq("pose", "front").in("day", days),
     supabase.from("weigh_ins").select("day, measured_at, value, unit, kg, source, flag").in("day", days),
   ]);
   if (photos.error || readings.error) {

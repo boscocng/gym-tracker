@@ -107,14 +107,14 @@ isOneToOne: false
                   ]
                 },"photos": {
                   Row: {
-                    "day": string,"storage_path": string,"taken_at": string,"thumb_path": string
+                    "day": string,"pose": Database["public"]['Enums']["photo_pose"],"storage_path": string,"taken_at": string,"thumb_path": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "day": string,"storage_path": string,"taken_at"?: string,"thumb_path": string
+                    "day": string,"pose": Database["public"]['Enums']["photo_pose"],"storage_path": string,"taken_at"?: string,"thumb_path": string
                   }
                   Update: {
-                    "day"?: string,"storage_path"?: string,"taken_at"?: string,"thumb_path"?: string
+                    "day"?: string,"pose"?: Database["public"]['Enums']["photo_pose"],"storage_path"?: string,"taken_at"?: string,"thumb_path"?: string
                   }
                   Relationships: [
                     
@@ -195,7 +195,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "day_mark_kind": "rest"|"skip","resolved_via": "normal"|"lock","rest_rule": "six_of_seven"|"strict","weigh_in_flag": "duplicate"|"outlier","weigh_in_source": "scale"|"manual","weight_unit": "lb"|"kg"
+            "day_mark_kind": "rest"|"skip","photo_pose": "front"|"back","resolved_via": "normal"|"lock","rest_rule": "six_of_seven"|"strict","weigh_in_flag": "duplicate"|"outlier","weigh_in_source": "scale"|"manual","weight_unit": "lb"|"kg"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -315,7 +315,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "day_mark_kind": ["rest", "skip"],"resolved_via": ["normal", "lock"],"rest_rule": ["six_of_seven", "strict"],"weigh_in_flag": ["duplicate", "outlier"],"weigh_in_source": ["scale", "manual"],"weight_unit": ["lb", "kg"]
+            "day_mark_kind": ["rest", "skip"],"photo_pose": ["front", "back"],"resolved_via": ["normal", "lock"],"rest_rule": ["six_of_seven", "strict"],"weigh_in_flag": ["duplicate", "outlier"],"weigh_in_source": ["scale", "manual"],"weight_unit": ["lb", "kg"]
           }
         }
 } as const
